@@ -1,5 +1,10 @@
 #!/bin/bash
 
+if [ -z $1 ]; then
+  echo "Usage: ./processed.sh <output directory>"
+  exit 1
+fi
+
 dir=$1
 sum1=0
 sum2=0
