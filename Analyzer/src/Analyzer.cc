@@ -1,9 +1,9 @@
 // -*- C++ -*-
 //
-// Package:    DemoAnalyzer
-// Class:      DemoAnalyzer
+// Package:    Analyzer
+// Class:      Analyzer
 // 
-/**\class DemoAnalyzer DemoAnalyzer.cc demo/DemoAnalyzer/src/DemoAnalyzer.cc
+/**\class Analyzer Analyzer.cc demo/Analyzer/src/Analyzer.cc
 
  Description: [one line class summary]
 
@@ -106,10 +106,10 @@ using namespace reco;
 //
 
 
-class DemoAnalyzer : public edm::EDAnalyzer {
+class Analyzer : public edm::EDAnalyzer {
    public:
-      explicit DemoAnalyzer(const edm::ParameterSet&);
-      ~DemoAnalyzer();
+      explicit Analyzer(const edm::ParameterSet&);
+      ~Analyzer();
 
       static void fillDescriptions(edm::ConfigurationDescriptions& descriptions);
 
@@ -271,7 +271,7 @@ class DemoAnalyzer : public edm::EDAnalyzer {
 //
 // constructors and destructor
 //
-DemoAnalyzer::DemoAnalyzer(const edm::ParameterSet& iConfig)
+Analyzer::Analyzer(const edm::ParameterSet& iConfig)
 
 {
   setbuf(stdout, NULL);
@@ -393,7 +393,7 @@ DemoAnalyzer::DemoAnalyzer(const edm::ParameterSet& iConfig)
 }
 
 
-DemoAnalyzer::~DemoAnalyzer()
+Analyzer::~Analyzer()
 {
 	
 		
@@ -420,14 +420,14 @@ DemoAnalyzer::~DemoAnalyzer()
 //
 
 
-void DemoAnalyzer::SelectEvt(const edm::Event& iEvent){
+void Analyzer::SelectEvt(const edm::Event& iEvent){
 	Nevent=iEvent.id().event();
 	//cout << "Event: " << evt << endl;
 	run=iEvent.id().run();
 	lumiblock=iEvent.id().luminosityBlock();
 }
 
-void DemoAnalyzer::SelectMET(const edm::Event& iEvent){
+void Analyzer::SelectMET(const edm::Event& iEvent){
   edm::Handle<edm::View<reco::PFMET> > pfmets; // Handle<reco::PFMET> mets;  didn't work for some reason
   iEvent.getByLabel("pfMet",pfmets);
   metPx = (pfmets->front()).px();
@@ -436,7 +436,7 @@ void DemoAnalyzer::SelectMET(const edm::Event& iEvent){
   metPhi=(pfmets->front()).phi();
 }
 
-const reco::Candidate* DemoAnalyzer::GetFinalState(const reco::Candidate* particle, const int id){
+const reco::Candidate* Analyzer::GetFinalState(const reco::Candidate* particle, const int id){
   for(unsigned int i = 0; i < particle->numberOfDaughters(); i++)
   {
     const reco::Candidate* daughter = particle->daughter(i);
@@ -449,7 +449,7 @@ const reco::Candidate* DemoAnalyzer::GetFinalState(const reco::Candidate* partic
   return NULL;
 }
 
-bool DemoAnalyzer::CheckParents(const reco::Candidate *c1,const reco::Candidate *c2){
+bool Analyzer::CheckParents(const reco::Candidate *c1,const reco::Candidate *c2){
 	if (c1->numberOfMothers()!=c2->numberOfMothers())
 		return false;
 	else{
@@ -461,7 +461,7 @@ bool DemoAnalyzer::CheckParents(const reco::Candidate *c1,const reco::Candidate 
 	return true;
 }
 
-void DemoAnalyzer::SelectMCGen(const edm::Handle<reco::GenParticleCollection>& genParticles){
+void Analyzer::SelectMCGen(const edm::Handle<reco::GenParticleCollection>& genParticles){
 	const reco::Candidate* Wp = NULL;
 	const reco::Candidate* Wm = NULL;
 	const reco::Candidate* Lp = NULL;
@@ -686,7 +686,7 @@ void DemoAnalyzer::SelectMCGen(const edm::Handle<reco::GenParticleCollection>& g
 	
 
 
-void DemoAnalyzer::SelectEl(const edm::Event& iEvent){
+void Analyzer::SelectEl(const edm::Event& iEvent){
 	
 	Handle<reco::GsfElectronCollection> electrons;
 	iEvent.getByLabel("gsfElectrons",electrons);
@@ -727,7 +727,7 @@ void DemoAnalyzer::SelectEl(const edm::Event& iEvent){
 
 }
 
-void DemoAnalyzer::SelectMu(const edm::Event& iEvent, const reco::BeamSpot &beamSpot){
+void Analyzer::SelectMu(const edm::Event& iEvent, const reco::BeamSpot &beamSpot){
 	
 	//Handle<reco::TrackCollection> gmuons;
 	//iEvent.getByLabel("globalMuons", gmuons);
@@ -796,7 +796,7 @@ void DemoAnalyzer::SelectMu(const edm::Event& iEvent, const reco::BeamSpot &beam
 } // ends SelectMu func
 	
 
-vector<float> DemoAnalyzer::CalcDLS(vector<TransientTrack> tracksVector,TransientVertex CMSFittedVtx,const reco::BeamSpot &beamSpot)     {
+vector<float> Analyzer::CalcDLS(vector<TransientTrack> tracksVector,TransientVertex CMSFittedVtx,const reco::BeamSpot &beamSpot)     {
 
         vector <float> DLValues; 
         float Lx = 0.;
@@ -893,7 +893,7 @@ vector<float> DemoAnalyzer::CalcDLS(vector<TransientTrack> tracksVector,Transien
 }
 
 
-float DemoAnalyzer::GetSimilarity(float *v1, float *v2, ROOT::Math::SMatrix<float,3> M)       {
+float Analyzer::GetSimilarity(float *v1, float *v2, ROOT::Math::SMatrix<float,3> M)       {
         float results = 0.;
         float v_tmp[3] = {0.,0.,0.};
 
@@ -910,7 +910,7 @@ float DemoAnalyzer::GetSimilarity(float *v1, float *v2, ROOT::Math::SMatrix<floa
         return results;
 }
 
-void DemoAnalyzer::ReconstrDstar(const Handle<reco::TrackCollection> &tracks,const ESHandle<TransientTrackBuilder> &theB,
+void Analyzer::ReconstrDstar(const Handle<reco::TrackCollection> &tracks,const ESHandle<TransientTrackBuilder> &theB,
 	const reco::BeamSpot &beamSpot, const TLorentzVector &J){ // float RecMass,float deltaM, float DL, float PK, float Ppi,float Ps){
 		vector<reco::TransientTrack> genralTracks = theB->build(tracks); //      declare new track builder for my new Transient track collection  ;
 		float dR,MD0,MDstar,LXY;//,lxyx,lxyy,lxy,x0,y0; 
@@ -1079,7 +1079,7 @@ void DemoAnalyzer::ReconstrDstar(const Handle<reco::TrackCollection> &tracks,con
 		}	//track 1 loop ends
 } // func ends
 
-void DemoAnalyzer::ReconstrD(const Handle<reco::TrackCollection> &tracks,const ESHandle<TransientTrackBuilder> &theB,
+void Analyzer::ReconstrD(const Handle<reco::TrackCollection> &tracks,const ESHandle<TransientTrackBuilder> &theB,
 	const reco::BeamSpot &beamSpot, const TLorentzVector &J){ // float RecMass,float deltaM, float DL, float PK, float Ppi,float Ps){
 		vector<reco::TransientTrack> genralTracks = theB->build(tracks); //      declare new track builder for my new Transient track collection  ;
 		float MD,LXY;//,x0,y0,lxy,lxyx,lxyy;
@@ -1224,7 +1224,7 @@ void DemoAnalyzer::ReconstrD(const Handle<reco::TrackCollection> &tracks,const E
 		}	//track 1 loop ends
 } 
 
-void DemoAnalyzer::SelectJet(const edm::Event& iEvent,const edm::EventSetup& iSetup,const reco::BeamSpot &beamSpot){
+void Analyzer::SelectJet(const edm::Event& iEvent,const edm::EventSetup& iSetup,const reco::BeamSpot &beamSpot){
 		
 		// jets
 		edm::Handle<reco::PFJetCollection> jets;
@@ -1289,7 +1289,7 @@ void DemoAnalyzer::SelectJet(const edm::Event& iEvent,const edm::EventSetup& iSe
 
 // returns vector of integers which are needed trigger bits
 // (called in the beginning of each run)
-void DemoAnalyzer::FindTriggerBits(const HLTConfigProvider& trigConf)
+void Analyzer::FindTriggerBits(const HLTConfigProvider& trigConf)
 {
   _vecTriggerBits.clear();
   _vecTriggerBits.resize(_vecTriggerNames.size());
@@ -1309,7 +1309,7 @@ void DemoAnalyzer::FindTriggerBits(const HLTConfigProvider& trigConf)
   }
 }
   
-void DemoAnalyzer::PrintTriggerBits()
+void Analyzer::PrintTriggerBits()
 {
   printf("********* Trigger Bits: **********\n");
   for(unsigned int n = 0; n < _vecTriggerNames.size(); n++)
@@ -1322,7 +1322,7 @@ void DemoAnalyzer::PrintTriggerBits()
 }
 
 // fill trigger bits
-void DemoAnalyzer::SelectTriggerBits(const edm::Handle<edm::TriggerResults>& HLTR)
+void Analyzer::SelectTriggerBits(const edm::Handle<edm::TriggerResults>& HLTR)
 {
   for(unsigned int i = 0; i < _vecTriggerBits.size(); i++)
   {
@@ -1339,7 +1339,7 @@ void DemoAnalyzer::SelectTriggerBits(const edm::Handle<edm::TriggerResults>& HLT
 
 
 		
-void DemoAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
+void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
    using namespace edm;
    using namespace reco;
    using namespace std;
@@ -1418,19 +1418,19 @@ void DemoAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
 
 // ------------ method called once each job just before starting event loop  ------------
 void 
-DemoAnalyzer::beginJob()
+Analyzer::beginJob()
 {
 }
 
 // ------------ method called once each job just after ending the event loop  ------------
 void 
-DemoAnalyzer::endJob() 
+Analyzer::endJob()
 {
 
 }
 
 // ------------ method called when starting to processes a run  ------------
-void DemoAnalyzer::beginRun(edm::Run const& iRun, edm::EventSetup const& iSetup){
+void Analyzer::beginRun(edm::Run const& iRun, edm::EventSetup const& iSetup){
  HLTConfigProvider triggerConfig;
   bool changed = true;
   triggerConfig.init(iRun, iSetup, _inputTagTriggerResults.process(), changed);
@@ -1440,26 +1440,26 @@ void DemoAnalyzer::beginRun(edm::Run const& iRun, edm::EventSetup const& iSetup)
 
 // ------------ method called when ending the processing of a run  ------------
 void 
-DemoAnalyzer::endRun(edm::Run const& , edm::EventSetup const& )
+Analyzer::endRun(edm::Run const& , edm::EventSetup const& )
 {
 
 }
 
 // ------------ method called when starting to processes a luminosity block  ------------
 void 
-DemoAnalyzer::beginLuminosityBlock(edm::LuminosityBlock const&, edm::EventSetup const&)
+Analyzer::beginLuminosityBlock(edm::LuminosityBlock const&, edm::EventSetup const&)
 {
 }
 
 // ------------ method called when ending the processing of a luminosity block  ------------
 void 
-DemoAnalyzer::endLuminosityBlock(edm::LuminosityBlock const&, edm::EventSetup const&)
+Analyzer::endLuminosityBlock(edm::LuminosityBlock const&, edm::EventSetup const&)
 {
 }
 
 // ------------ method fills 'descriptions' with the allowed parameters for the module  ------------
 void
-DemoAnalyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
+Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   //The following says we do not know what parameters are allowed so do no validation
   // Please change this to state exactly what you do use, even if it is no parameters
   edm::ParameterSetDescription desc;
@@ -1468,4 +1468,4 @@ DemoAnalyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
 }
 
 //define this as a plug-in
-DEFINE_FWK_MODULE(DemoAnalyzer);
+DEFINE_FWK_MODULE(Analyzer);
