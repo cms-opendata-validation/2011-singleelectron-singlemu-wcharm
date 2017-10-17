@@ -53,6 +53,7 @@ process = cms.Process("Demo")
 process.load('Configuration.Geometry.GeometryIdeal_cff')
 process.load("Configuration.StandardSequences.MagneticField_cff")
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
+process.load("TrackingTools/TransientTrack/TransientTrackBuilder_cfi")
 #
 # global tag as described at http://opendata.cern.ch/getting-started/CMS?ln=en
 if flag_mc == 0:

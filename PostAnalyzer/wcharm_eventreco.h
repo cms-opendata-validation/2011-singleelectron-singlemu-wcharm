@@ -1,8 +1,8 @@
-#ifndef EVENTRECO_WCHARM_H
-#define EVENTRECO_WCHARM_H
+#ifndef WCHARM_EVENTRECO_H
+#define WCHARM_EVENTRECO_H
 
-#include "tree.h"
-#include "selection_wcharm.h"
+#include "wcharm_tree.h"
+#include "wcharm_selection.h"
 #include <map>
 #include <TChain.h>
 #include <mystaff.cxx>
@@ -143,7 +143,7 @@ void eventreco(ZEventRecoInput in)
   TChain* chain = new TChain("tree");
   for(int f = 0; f < in.VecInFile.size(); f++)
     chain->Add(in.VecInFile[f]);
-  ZTree* preselTree = new ZTree(flagMC);
+  ZTreeWcharm* preselTree = new ZTreeWcharm(flagMC);
   preselTree->Init(chain);
   // disable unneeded
   chain->SetBranchStatus("metPx", 0);
@@ -219,12 +219,12 @@ void eventreco(ZEventRecoInput in)
       {
         if(in.Channel == 1 && sign == -1) continue;
         if(in.Channel == 2 && sign == +1) continue;
-        if (!ev || (ev % 3) != (in.FinalState % 3) || (preselTree->CGen % 2) == 0) continue;
+        if (!ev || (ev % 3) != (in.FinalState % 3) || (preselTree->cGen % 2) == 0) continue;
       }
       // MC other?
       if(in.Type == 3)
       {
-        if(((in.Channel == 1 && sign == +1) || (in.Channel == 2 && sign == -1)) && (ev && (ev % 3) == (in.FinalState % 3)) && (preselTree->CGen % 2) != 0) continue;
+        if(((in.Channel == 1 && sign == +1) || (in.Channel == 2 && sign == -1)) && (ev && (ev % 3) == (in.FinalState % 3)) && (preselTree->cGen % 2) != 0) continue;
       }
       nGen++;
     }
@@ -309,7 +309,7 @@ void eventreco(ZEventRecoInput in)
           continue;
         vecJ.SetPtEtaPhiM(TMath::Abs(preselTree->j_pt[j]), preselTree->j_eta[j], preselTree->j_phi[j], preselTree->j_m[j]);
         TLorentzVector vecMu;
-        int sign = SelectCharmMu(preselTree, vecJ, vecLep, vecMu, (in.Channel == 1));
+        int sign = SelectCharmMu(preselTree, vecJ, vecLep, (in.Channel == 1), vecMu);
         if(!sign) 
           continue;
         bestpt = TMath::Abs(preselTree->j_pt[j]);

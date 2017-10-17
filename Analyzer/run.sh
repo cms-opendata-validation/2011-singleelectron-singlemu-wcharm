@@ -22,8 +22,9 @@
 # (by default data SingleMu sample is uncommented). 
 # For Monte Carlo (MC) set mc = 1 below, for signal MC also set gen = 1
 #
-INPUTLIST='data/CMS_Run2011A_SingleMu_AOD_12Oct2013-v1-all_file_index.txt'
-#INPUTLIST='data/CMS_Run2011A_SingleElectron_AOD_12Oct2013-v1-all_file_index.txt'
+#INPUTLIST='data/test.txt'
+#INPUTLIST='data/CMS_Run2011A_SingleMu_AOD_12Oct2013-v1-all_file_index.txt'
+INPUTLIST='data/CMS_Run2011A_SingleElectron_AOD_12Oct2013-v1-all_file_index.txt'
 #
 # MC ('W + c' signal and 'W + jets other' background) - most time consuming!
 #INPUTLIST='mc/CMS_MonteCarlo2011_Summer11LegDR_W1Jet_TuneZ2_7TeV-madgraph-tauola_AODSIM_PU_S13_START53_LV6-v1-all_file_index.txt'
@@ -41,8 +42,8 @@ INPUTLIST='data/CMS_Run2011A_SingleMu_AOD_12Oct2013-v1-all_file_index.txt'
 # processed by PostAnalyzer after all (see PostAnalyzer/README.txt).
 #
 # Data
-OUTPUTDIR='ntuples-data/_SingleMu'
-#OUTPUTDIR='ntuples-data/_SingleElectron'
+#OUTPUTDIR='ntuples-data/SingleMu'
+OUTPUTDIR='ntuples-data/SingleElectron'
 #
 # MC ('W + c' signal and 'W + jets other' background)
 #OUTPUTDIR='ntuples-mc/W1Jet_TuneZ2_7TeV-madgraph-tauola'
@@ -83,7 +84,7 @@ mc=0
 # Splitting of input files between parallel jobs is done automatically
 # (there will be NP root and log files in the output directory).
 #
-NP=1
+NP=500
 outrootsuffix='' # optional suffix for output root file names (can be a subdirectory, for instance)
 #
 ########################################################################
@@ -118,8 +119,10 @@ fi
 # call cmsRun analyzer_cfg.py for each parallel job
 for p in `seq 1 $NP`
 do
-  command="time cmsRun analyzer_cfg.py ${OUTPUTDIR}/inputList${outrootsuffix}_${p}.txt ${OUTPUTDIR}/ttbarSel${outrootsuffix}_${p}.root ${reco} ${gen} ${mc}"
-  nohup ${command} >& ${OUTPUTDIR}/log${outrootsuffix}_${p}.txt&
+  command="time cmsRun analyzer_cfg.py ${OUTPUTDIR}/inputList${outrootsuffix}_${p}.txt ${OUTPUTDIR}/wcharmSel${outrootsuffix}_${p}.root ${reco} ${gen} ${mc}"
+#  nohup ${command} >& ${OUTPUTDIR}/log${outrootsuffix}_${p}.txt&
+#  submit -N cmsRun-${p} -q default.q -l h_vmem=1.9G "${command} >& ${OUTPUTDIR}/log${outrootsuffix}_${p}.txt"
+  submit -N cmsRun-${p} -q long.q -l h_vmem=1.9G "${command} >& ${OUTPUTDIR}/log${outrootsuffix}_${p}.txt"
 done
 ########################################################################
 
