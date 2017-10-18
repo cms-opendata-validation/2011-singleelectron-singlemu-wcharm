@@ -14,6 +14,37 @@
 # jobs you could use './running.sh <dir>' and './processed.sh <dir>', 
 # where <dir> is the output directory.
 #
+#INPUTLIST='data/test.txt'
+if [ -z $1 ]; then
+  echo "Usage ./run.sh <sample>"
+  exit 1
+fi
+runSample=$1 # 1 data mu, 2 data el, 3 MC
+if [ ${runSample} -eq 1 ]; then
+  INPUTLIST='data/CMS_Run2011A_SingleMu_AOD_12Oct2013-v1-all_file_index.txt'
+  OUTPUTDIR='ntuples-data/SingleMu'
+  jobName='wc-mu-'
+  reco=1
+  gen=0
+  mc=0
+  NP=200
+elif [ ${runSample} -eq 2 ]; then
+  INPUTLIST='data/CMS_Run2011A_SingleElectron_AOD_12Oct2013-v1-all_file_index.txt'
+  OUTPUTDIR='ntuples-data/SingleElectron'
+  jobName='wc-el-'
+  reco=1
+  gen=0
+  mc=0
+  NP=100
+elif [ ${runSample} -eq 3 ]; then
+  INPUTLIST='mc/CMS_MonteCarlo2011_Summer11LegDR_W1Jet_TuneZ2_7TeV-madgraph-tauola_AODSIM_PU_S13_START53_LV6-v1-all_file_index.txt'
+  OUTPUTDIR='ntuples-mc/W1Jet_TuneZ2_7TeV-madgraph-tauola'
+  jobName='wc-mc-'
+  reco=1
+  gen=1
+  mc=1
+  NP=500
+fi
 ########################################################################
 ########################## Input lists #################################
 ########################################################################
@@ -22,9 +53,8 @@
 # (by default data SingleMu sample is uncommented). 
 # For Monte Carlo (MC) set mc = 1 below, for signal MC also set gen = 1
 #
-#INPUTLIST='data/test.txt'
 #INPUTLIST='data/CMS_Run2011A_SingleMu_AOD_12Oct2013-v1-all_file_index.txt'
-INPUTLIST='data/CMS_Run2011A_SingleElectron_AOD_12Oct2013-v1-all_file_index.txt'
+#INPUTLIST='data/CMS_Run2011A_SingleElectron_AOD_12Oct2013-v1-all_file_index.txt'
 #
 # MC ('W + c' signal and 'W + jets other' background) - most time consuming!
 #INPUTLIST='mc/CMS_MonteCarlo2011_Summer11LegDR_W1Jet_TuneZ2_7TeV-madgraph-tauola_AODSIM_PU_S13_START53_LV6-v1-all_file_index.txt'
@@ -43,7 +73,7 @@ INPUTLIST='data/CMS_Run2011A_SingleElectron_AOD_12Oct2013-v1-all_file_index.txt'
 #
 # Data
 #OUTPUTDIR='ntuples-data/SingleMu'
-OUTPUTDIR='ntuples-data/SingleElectron'
+#OUTPUTDIR='ntuples-data/SingleElectron'
 #
 # MC ('W + c' signal and 'W + jets other' background)
 #OUTPUTDIR='ntuples-mc/W1Jet_TuneZ2_7TeV-madgraph-tauola'
@@ -56,13 +86,13 @@ OUTPUTDIR='ntuples-data/SingleElectron'
 #
 # Process reconstruction level (normally always should be done, 
 # unless you want some pure generator level MC study)
-reco=1 
+#reco=1 
 # Process generator level (should be done for signal MC to store 
 # "true" information for detector efficiency corrections,
 # not needed for background MC)
-gen=0
+#gen=0
 # For MC set to 1
-mc=0
+#mc=0
 ########################################################################
 
 ########################################################################
@@ -84,7 +114,7 @@ mc=0
 # Splitting of input files between parallel jobs is done automatically
 # (there will be NP root and log files in the output directory).
 #
-NP=500
+#NP=100
 outrootsuffix='' # optional suffix for output root file names (can be a subdirectory, for instance)
 #
 ########################################################################
@@ -122,7 +152,7 @@ do
   command="time cmsRun analyzer_cfg.py ${OUTPUTDIR}/inputList${outrootsuffix}_${p}.txt ${OUTPUTDIR}/wcharmSel${outrootsuffix}_${p}.root ${reco} ${gen} ${mc}"
 #  nohup ${command} >& ${OUTPUTDIR}/log${outrootsuffix}_${p}.txt&
 #  submit -N cmsRun-${p} -q default.q -l h_vmem=1.9G "${command} >& ${OUTPUTDIR}/log${outrootsuffix}_${p}.txt"
-  submit -N cmsRun-${p} -q long.q -l h_vmem=1.9G "${command} >& ${OUTPUTDIR}/log${outrootsuffix}_${p}.txt"
+  submit -N ${jobName}${p} -q short.q -l h_vmem=3.99G "${command} >& ${OUTPUTDIR}/log${outrootsuffix}_${p}.txt"
 done
 ########################################################################
 

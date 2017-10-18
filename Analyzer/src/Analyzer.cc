@@ -1384,7 +1384,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
   SelectMET(iEvent);
   SelectEvt(iEvent);
   Nel=0;
-  //SelectEl(iEvent);
+  SelectEl(iEvent);
   SelectMu(iEvent,beamSpot);
   if(_flagGEN)
   {
