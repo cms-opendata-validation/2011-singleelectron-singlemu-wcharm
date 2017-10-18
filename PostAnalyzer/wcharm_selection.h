@@ -1,10 +1,11 @@
-#ifndef WCHARM_SELECTION_H
-#define WCHARM_SELECTION_H
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 // >>>>>>>>>>>> Helper for W+c event selection >>>>>>>>>>>>>>>>>>>>>>>>>
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 // Consult analysis documentation (papers, description-wcharm.pdf) for
 // better description of applied cuts etc.
+
+#ifndef WCHARM_SELECTION_H
+#define WCHARM_SELECTION_H
 
 // additional files from this analysis
 #include "wcharm_tree.h"

@@ -21,6 +21,7 @@ if [ -z $1 ]; then
 fi
 runSample=$1 # 1 data mu, 2 data el, 3 MC
 if [ ${runSample} -eq 1 ]; then
+  # 91006026 events
   INPUTLIST='data/CMS_Run2011A_SingleMu_AOD_12Oct2013-v1-all_file_index.txt'
   OUTPUTDIR='ntuples-data/SingleMu'
   jobName='wc-mu-'
@@ -29,6 +30,7 @@ if [ ${runSample} -eq 1 ]; then
   mc=0
   NP=200
 elif [ ${runSample} -eq 2 ]; then
+  # 41709195 events
   INPUTLIST='data/CMS_Run2011A_SingleElectron_AOD_12Oct2013-v1-all_file_index.txt'
   OUTPUTDIR='ntuples-data/SingleElectron'
   jobName='wc-el-'
@@ -37,6 +39,7 @@ elif [ ${runSample} -eq 2 ]; then
   mc=0
   NP=100
 elif [ ${runSample} -eq 3 ]; then
+  # 78347691 events
   INPUTLIST='mc/CMS_MonteCarlo2011_Summer11LegDR_W1Jet_TuneZ2_7TeV-madgraph-tauola_AODSIM_PU_S13_START53_LV6-v1-all_file_index.txt'
   OUTPUTDIR='ntuples-mc/W1Jet_TuneZ2_7TeV-madgraph-tauola'
   jobName='wc-mc-'
