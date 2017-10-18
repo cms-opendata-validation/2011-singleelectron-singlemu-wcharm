@@ -90,7 +90,7 @@ class ZControlPlotMCSamples
 // Arguments:
 //    const ZControlPlotMCSamples& MCSamples: MC samples (see description in class ZControlPlotMCSamples)
 //    const std::vector<double>& vecMCFactor: vector with weights of MC samples (same size as vecMCName)
-//    const std::vector<TH2F*>& cpHR: vector with 2D frame histograms for each variable (should be 6 variables as in SMP-12-002 Fig. 7)
+//    const std::vector<TH2F*>& cpHR: vector with 2D frame histograms for each variable
 //    const std::vector<TString>& cpVar: vector with variable names (same size as cpHR)
 //    const std::vector<int>& cpFS: vector with charm final-state identifiers
 //

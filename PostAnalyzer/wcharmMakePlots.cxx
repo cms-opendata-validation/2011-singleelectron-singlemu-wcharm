@@ -196,7 +196,7 @@ int main(int argc, char** argv)
           vecHMC[mc]->Add(h);
       }
       // data
-      TFile* fData = TFile::Open(TString::Format("%s/data-c%d-f%d.root", baseDir.Data(), ch, fs));
+      TFile* fData = TFile::Open(TString::Format("%s/data-c%d-f%d.root", gHistDir.Data(), ch, fs));
       TH1D* hDataos = (TH1D*)fData->Get(TString::Format("h_%s_os", var.Data()));
       TH1D* hDatass = (TH1D*)fData->Get(TString::Format("h_%s_ss", var.Data()));
       TH1D* hData = new TH1D(*hDataos);
@@ -337,7 +337,7 @@ int main(int argc, char** argv)
           vecHMC[mc]->Add(h);
       }
       // data
-      TFile* fData = TFile::Open(TString::Format("%s/data-c%d-f%d.root", baseDir.Data(), ch, fs));
+      TFile* fData = TFile::Open(TString::Format("%s/data-c%d-f%d.root", gHistDir.Data(), ch, fs));
       TH1D* hDataos = (TH1D*)fData->Get(TString::Format("h_%s_os", var.Data()));
       TH1D* hDatass = (TH1D*)fData->Get(TString::Format("h_%s_ss", var.Data()));
       TH1D* hData = new TH1D(*hDataos);
@@ -415,7 +415,7 @@ int main(int argc, char** argv)
   double brDs = 0.00622;
   // D*
   {
-    TFile* f = TFile::Open(baseDir + "/mcSigGen-c1-f1.root");
+    TFile* f = TFile::Open(gHistDir + "/mcSigGen-c1-f1.root");
     TH1D* h = (TH1D*)f->Get("h_gen_ds");
     NGen[1][0] = h->Integral();
     double acc = NReco[1][0] / NGen[1][0];
@@ -432,7 +432,7 @@ int main(int argc, char** argv)
   double brDc = 0.0208;
   // D+
   {
-    TFile* f = TFile::Open(baseDir + "/mcSigGen-c1-f2.root");
+    TFile* f = TFile::Open(gHistDir + "/mcSigGen-c1-f2.root");
     TH1D* h = (TH1D*)f->Get("h_gen_dc");
     NGen[0][0] = h->Integral();
     double acc = NReco[0][0] / NGen[0][0];

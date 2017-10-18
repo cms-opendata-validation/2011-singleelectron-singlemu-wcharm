@@ -213,7 +213,7 @@ int SelectDstar(const ZTreeWcharm* preselTree, TLorentzVector& vecJ, TLorentzVec
     // consistency check
     if(j == preselTree->Njet)
     {
-      throw std::logic_error("Wrong j <---> D finding\n");
+      //throw std::logic_error("Wrong j <---> D finding\n");
       //printf("Wrong j <---> D finding\n");
       //return 0;
     }
@@ -289,7 +289,7 @@ int SelectDch(const ZTreeWcharm* preselTree, TLorentzVector& vecJ, TLorentzVecto
     // consistency check
     if(j == preselTree->Njet)
     {
-      throw std::logic_error("Wrong j <---> D finding\n");
+      //throw std::logic_error("Wrong j <---> D finding\n");
       //printf("Wrong j <---> D finding\n");
       //return 0;
     }

@@ -29,7 +29,7 @@ int main(int argc, char** argv)
 
   // flag channel
   bool flagWtoMu = 1; // if 1, W->mu decays will be processed
-  bool flagWtoEl = 0; // if 1, W->e decays will be processed
+  bool flagWtoEl = 1; // if 1, W->e decays will be processed
 
   // flag final state
   bool flagDstar = 1; // if 1, c->D* will be processed
