@@ -1,3 +1,5 @@
+
+#include "wcharm_settings.h"
 #include <TStyle.h>
 #include <TCanvas.h>
 #include <TH1F.h>
@@ -50,8 +52,8 @@ void SetCPHRange(TH2* h)
 int main(int argc, char** argv)
 {
   Style();
-  TString baseDir = "/nfs/dust/cms/user/zenaiev/opendata/wcharm/outEventreco4";
-  TString plotDir = "/nfs/dust/cms/user/zenaiev/opendata/wcharm/outPlots";
+  TString baseDir = gHistDir;
+  TString plotDir = gPlotsDir;
   
   TString suf[3] = {"ee", "mumu", "emu"};
   TString data = "ttbarRec";

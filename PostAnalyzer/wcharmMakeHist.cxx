@@ -25,12 +25,11 @@ int main(int argc, char** argv)
 
   // flags what to run
   bool flagData = 1; // if 1, data will be processed
-  bool flagMCsig = 1; // if 1, MC will be processed
-  /*bool flagMCdy = 1;*/
+  bool flagMC = 1; // if 1, MC will be processed
 
   // flag channel
   bool flagWtoMu = 1; // if 1, W->mu decays will be processed
-  bool flagWtoEl = 1; // if 1, W->e decays will be processed
+  bool flagWtoEl = 0; // if 1, W->e decays will be processed
 
   // flag final state
   bool flagDstar = 1; // if 1, c->D* will be processed
@@ -43,7 +42,7 @@ int main(int argc, char** argv)
   // This class is used to store needed input settings for control plots and cross sections.
   std::vector<ZVarHisto> vecVH, vecVHGen;
   // histograms and variables for control plots.
-  // Below OS is opposite sign (W-c, W+cbar), SS is same sign (W+c, W-c).
+  // Below OS is opposite sign (cW-, cbarW+), SS is same sign (cW+, cbarW-).
   // mass difference M(D*) - M(D0)
   vecVH.push_back(ZVarHisto("dmd", new TH1D("h_mds_os", "m(D*) - m(D0) OS", 17, 0.136, 0.17), 1, -1, false));
   vecVH.push_back(ZVarHisto("dmd", new TH1D("h_mds_ss", "m(D*) - m(D0) SS", 17, 0.136, 0.17), 1, +1, false));
@@ -91,11 +90,11 @@ int main(int argc, char** argv)
       {
         // ZEventWcharmRecoInput is a class for event reconstruction, see its description in wcharm_eventreco.h
         ZEventWcharmRecoInput in;
-        //in.MaxNEvents = 1000; // if you need to limit the number of processed events
+        //in.MaxNEvents = 1e5; // if you need to limit the number of processed events
         in.Name = "data"; // name pattern for output histograms
         in.Type = 1; // type = 1 for data, 2 for MC signal, 3 for MC 'ttbar other', 4 for the rest of MC background samples
-        in.Channel = wLep; // W decay channel
-        in.FinalState = charm; // charm final state
+        in.WChannel = wLep; // W decay channel
+        in.CharmFinalState = charm; // charm final state
         in.VecVarHisto = vecVH; // need to copy it, because further will be changed
         // input ROOT ntuples
         if(wLep == 1) // W->mu
@@ -103,7 +102,7 @@ int main(int argc, char** argv)
         else if(wLep == 2) // W->e
           in.AddToChain(dataDir + "/SingleElectron/*.root");
         // main part: event reconstruction call
-        eventreco(in);
+        wcharm_eventreco(in);
       }
       
       // *****************************************
@@ -113,60 +112,47 @@ int main(int argc, char** argv)
       // MC event weights need to be changed to most precise theoretical predictions,
       // the formula is:
       // weight = lumi / (nevents / sigma_MC) * (sigma_theory / sigma_MC) = lumi / nevents * sigma_theory
+      // However, if we do not other precise theoretical prediction for W + 1jet production,
+      // then we put sigma_theory = sigma_MC and:
+      // weight = lumi / nevents * sigma_MC
       //
       // Number of events can be obtained from webpage (see http://opendata.cern.ch/collection/CMS-Simulated-Datasets),
       // but it should be checked that all events have been processed at the Analyzer step (see end of log files)
+      // nevents = 72165352
       //
-      // number of events: 72165352
-      // MC cross section -> theory: 25431 -> 31314
-      // W->lX branching ration = 0.32
-      // weight: 2500.0 / (72165352. / (25431. * 0.32)) * (31314. / 25431.) = 0.3471
-      if(flagMCsig)
+      // MC cross section can be obtained from any ROOT file in the mC sample: open the ROOT file, create TBrowser, navigate to
+      // Runs -> GenRunInfoProduct_generator__SIM. -> GenRunInfoProduct_generator__SIM.obj -> InternalXSec -> value_
+      // sigma_MC = 4611.8
+      //
+      // Now calculate the weight:
+      // weight: 2500.0 / 72165352 * 4611.8 = 0.1598
+      if(flagMC)
       {
         ZEventWcharmRecoInput in;
         //in.MaxNEvents = 1e5;
-        in.Weight = 0.3197;
+        in.Weight = 0.1598; // weight (see above)
         in.Name = "mcSigReco";
         in.Type = 2;
-        in.Channel = wLep;
-        in.FinalState = charm;
+        in.WChannel = wLep;
+        in.CharmFinalState = charm;
         in.VecVarHisto = vecVH;
-        in.AddToChain(mcDir + "/W1Jet_TuneZ2_7TeV-madgraph-tauola/CMS_MonteCarlo2011_Summer11LegDR_W1Jet_TuneZ2_7TeV-madgraph-tauola_AODSIM_PU_S13_START53_LV6-v1_00000/*.root");
-        in.AddToChain(mcDir + "/W1Jet_TuneZ2_7TeV-madgraph-tauola/CMS_MonteCarlo2011_Summer11LegDR_W1Jet_TuneZ2_7TeV-madgraph-tauola_AODSIM_PU_S13_START53_LV6-v1_30000/*.root");
-        // signal reco level
-        eventreco(in);
-        // MC other
+        in.AddToChain(mcDir + "/W1Jet_TuneZ2_7TeV-madgraph-tauola/*.root");
+        // main part: event reconstruction call for MC signal
+        wcharm_eventreco(in);
+        // MC other (background): re-use existing ZEventWcharmRecoInput, just change type
         in.Name = "mcSigOtherReco";
         in.Type = 3;
-        eventreco(in);
-        // signal gen level
+        wcharm_eventreco(in);
+        // MC signal, generator level: again re-use existing ZEventWcharmRecoInput, change type and set proper flag (see below)
         in.Name = "mcSigGen";
         in.Type = 2;
         in.VecVarHisto = vecVHGen;
-        in.Gen = true;
-        eventreco(in);
+        in.Gen = true; // flag to notify that generator level should be processed
+        wcharm_eventreco(in);
       }
-      /*// *****************************************
-      // **************** MC DY ******************
-      // *****************************************
-      // Events: 36408225
-      // Sigma: 2513 -> 3048
-      // weight: 0.5 * 5000. / (36408225. / (2513. * 0.1)) * (3048. / 2513.) = 0.02093
-      if(flagMCdy)
-      {
-        ZEventRecoInput in;
-        //in.MaxNEvents = 1000;
-        in.Type = 4;
-        in.Channel = ch;
-        in.FinalState = fs;
-        in.VecVarHisto = vecVH;
-        in.Name = "mcDYReco";
-        in.Weight = 0.02093;
-        in.AddToChain(mcDir + "/DYJetsToLL_TuneZ2_M-50_7TeV-madgraph-tauola/*.root");
-        eventreco(in);
-      }*/
     }
   }
 
   return 0;
 }
+// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>

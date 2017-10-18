@@ -11,7 +11,7 @@
 #include <TChain.h>
 
 // Class which gives access to all information in each event stored in ntuples
-class ZTree
+class ZTreeWcharm
 {
   public :
     // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -183,17 +183,17 @@ class ZTree
 
     // constructor
     // argument: true for MC, false (default) for data
-    ZTree(bool flagMC = false) : fChain(0), _flagMC(flagMC) { }
+    ZTreeWcharm(bool flagMC = false) : fChain(0), _flagMC(flagMC) { }
 
     // destructor
-    virtual ~ZTree() { }
+    virtual ~ZTreeWcharm() { }
 
     // initialise with provided tree pointer
     virtual void    Init(TTree *tree);
 };
 
 // initialise with provided tree pointer
-void ZTree::Init(TTree *tree)
+void ZTreeWcharm::Init(TTree *tree)
 {
   // Set branch addresses and branch pointers
   if (!tree) return;

@@ -387,3 +387,5 @@ int SelectCharmMu(const ZTreeWcharm* preselTree, const TLorentzVector& vecJet, c
   vecMu.SetPtEtaPhiM(TMath::Abs(preselTree->mu_pt[best]), preselTree->mu_eta[best], preselTree->mu_phi[best], massMu);
   return (preselTree->mu_pt[best] > 0) ? +1 : -1;
 }
+
+#endif
