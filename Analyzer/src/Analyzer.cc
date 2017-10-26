@@ -379,14 +379,14 @@ Analyzer::Analyzer(const edm::ParameterSet& iConfig)
   // MC generated info
   if(_flagGEN)
   {
-  /*	tree->Branch("mcDsmWp",&mcDsmWp,"mcDsmWp/I");
+    /*	tree->Branch("mcDsmWp",&mcDsmWp,"mcDsmWp/I");
         tree->Branch("mcDpWm",&mcDpWm,"mcDpWm/I");
         tree->Branch("mcDmWp",&mcDmWp,"mcDmWp/I");
         tree->Branch("mcCmupWm",&mcCmupWm,"mcCmupWm/I");
         tree->Branch("mcCmumWp",&mcCmumWp,"mcCmumWp/I");*/
-  tree->Branch("mcEventType",&mcEventType,"mcEventType/I");
-  tree->Branch("cGen",&cGen,"cGen/I");
-  /*tree->Branch("mcDspWm",&mcDspWm,"mcDspWm/I");
+    tree->Branch("mcEventType",&mcEventType,"mcEventType/I");
+    tree->Branch("cGen",&cGen,"cGen/I");
+    /*tree->Branch("mcDspWm",&mcDspWm,"mcDspWm/I");
         tree->Branch("mcDspWm",&mcDspWm,"mcDspWm/I");
         tree->Branch("mcDspWm",&mcDspWm,"mcDspWm/I");
         tree->Branch("mcDspWm",&mcDspWm,"mcDspWm/I"); */

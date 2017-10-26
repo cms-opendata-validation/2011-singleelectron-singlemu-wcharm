@@ -28,13 +28,13 @@ int main(int argc, char** argv)
   bool flagMC = 1; // if 1, MC will be processed
 
   // flag channel
-  bool flagWtoMu = 1; // if 1, W->mu decays will be processed
+  bool flagWtoMu = 0; // if 1, W->mu decays will be processed
   bool flagWtoEl = 1; // if 1, W->e decays will be processed
 
   // flag final state
   bool flagDstar = 1; // if 1, c->D* will be processed
   bool flagDch = 1; // if 1, c->D+ will be processed
-  bool flagMu = 1; // if 1, c->mu will be processed
+  bool flagMu = 0; // if 1, c->mu will be processed
 
   // histograms
   TH1::SetDefaultSumw2(); // keep histogram weights by default
