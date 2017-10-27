@@ -75,7 +75,7 @@ int SelectEl(const ZTreeWcharm* preselTree, TLorentzVector& vec)
     if(el == best)
       continue;
     // skip if selected electron and current one have the same sign
-    if(preselTree->el_pt[el] * bestpt > 0)
+    if(preselTree->el_pt[el] * preselTree->el_pt[best] > 0)
       continue;
     // skip if current electron has pT < 20 GeV or |eta| > 2.5
     if(TMath::Abs(preselTree->el_pt[el]) < 20.0)
@@ -149,7 +149,7 @@ int SelectMu(const ZTreeWcharm* preselTree, TLorentzVector& vec)
     if(mu == best)
       continue;
     // skip if selected muon and current one have the same sign
-    if(preselTree->mu_pt[mu] * bestpt > 0)
+    if(preselTree->mu_pt[mu] * preselTree->mu_pt[best] > 0)
       continue;
     // skip if current muon has pT < 25 GeV or |eta| > 2.4
     if(TMath::Abs(preselTree->mu_pt[mu]) < 25.0)

@@ -40,8 +40,11 @@ elif [ ${runSample} -eq 2 ]; then
   NP=100
 elif [ ${runSample} -eq 3 ]; then
   # 78347691 events
-  INPUTLIST='mc/CMS_MonteCarlo2011_Summer11LegDR_W1Jet_TuneZ2_7TeV-madgraph-tauola_AODSIM_PU_S13_START53_LV6-v1-all_file_index.txt'
-  OUTPUTDIR='ntuples-mc/W1Jet_TuneZ2_7TeV-madgraph-tauola'
+  #INPUTLIST='mc/CMS_MonteCarlo2011_Summer11LegDR_W1Jet_TuneZ2_7TeV-madgraph-tauola_AODSIM_PU_S13_START53_LV6-v1-all_file_index.txt'
+  #OUTPUTDIR='ntuples-mc/W1Jet_TuneZ2_7TeV-madgraph-tauola'
+  # 78347691
+  INPUTLIST='mc/CMS_MonteCarlo2011_Summer11LegDR_WJetsToLNu_TuneZ2_7TeV-madgraph-tauola_AODSIM_PU_S13_START53_LV6-v1_all_file_index.txt'
+  OUTPUTDIR='ntuples-mc/WJetsToLNu_TuneZ2_7TeV-madgraph-tauola'
   jobName='wc-mc-'
   reco=1
   gen=1

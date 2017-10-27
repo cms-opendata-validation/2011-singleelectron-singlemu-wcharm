@@ -5,17 +5,11 @@
 // 
 /**\class Analyzer Analyzer.cc demo/Analyzer/src/Analyzer.cc
 
- Description: [one line class summary]
+ Description: W+c ntuple production
 
  Implementation:
-     [Notes on implementation]
+     for Open Data 2011
 */
-//
-// Original Author:  
-//         Created:  Tue Jul 19 12:43:42 CEST 2016
-// $Id$
-//
-//
 
 
 // system include files
@@ -23,21 +17,16 @@
 #include <math.h>
 #include <stdio.h>
 #include <stdbool.h>
+#include <vector>
+
 // user include files
 #include "FWCore/Framework/interface/Frameworkfwd.h"
 #include "FWCore/Framework/interface/EDAnalyzer.h"
-
 #include "FWCore/Framework/interface/Event.h"
 #include "FWCore/Framework/interface/MakerMacros.h"
-
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 
-//
-//added 
-//
 //------ ADD EXTRA HEADER FILES--------------------//
-#include "math.h"
-#include <vector>
 #include "FWCore/Framework/interface/EventSetup.h"
 #include "FWCore/Framework/interface/ESHandle.h"
 #include "FWCore/MessageLogger/interface/MessageLogger.h"
@@ -57,11 +46,9 @@
 // for vertices refit:
 #include "TrackingTools/TransientTrack/interface/TransientTrackBuilder.h"
 #include "TrackingTools/Records/interface/TransientTrackRecord.h"
-
 #include "RecoVertex/AdaptiveVertexFit/interface/AdaptiveVertexFitter.h"
 #include "RecoVertex/AdaptiveVertexFinder/interface/AdaptiveVertexReconstructor.h"
 #include "RecoVertex/TrimmedKalmanVertexFinder/interface/KalmanTrimmedVertexFinder.h"
-
 #include "RecoVertex/VertexPrimitives/interface/TransientVertex.h"
 #include "RecoVertex/VertexPrimitives/interface/VertexException.h"
 #include "TrackingTools/TransientTrack/interface/TrackTransientTrack.h"
@@ -98,14 +85,14 @@
 #include <TLorentzVector.h>
 #include <TVector3.h>
 
+// used namespaces (not the best practice, be aware)
 using namespace std;
 using namespace edm;
 using namespace reco;
+
 //
 // class declaration
 //
-
-
 class Analyzer : public edm::EDAnalyzer {
   public:
     explicit Analyzer(const edm::ParameterSet&);
@@ -124,8 +111,8 @@ class Analyzer : public edm::EDAnalyzer {
     virtual void beginLuminosityBlock(edm::LuminosityBlock const&, edm::EventSetup const&);
     virtual void endLuminosityBlock(edm::LuminosityBlock const&, edm::EventSetup const&);
 
-    //
-    void SelectEvt(const edm::Event& iEvent);
+    // user routines (detailed description given with the method implementations)
+    void SelectEvent(const edm::Event& iEvent);
     void SelectEl(const edm::Event& iEvent);
     void SelectMu(const edm::Event& iEvent,const reco::BeamSpot &beamSpot);
     void SelectJet(const edm::Event& iEvent,const edm::EventSetup& iSetup,const reco::BeamSpot &beamSpot);\
@@ -133,34 +120,46 @@ class Analyzer : public edm::EDAnalyzer {
     void SelectMET(const edm::Event& iEvent);
     void ReconstrDstar(const Handle<reco::TrackCollection> &tracks,const ESHandle<TransientTrackBuilder> &theB, const reco::BeamSpot &beamSpot,const TLorentzVector &J);
     void ReconstrD(const Handle<reco::TrackCollection> &tracks,const ESHandle<TransientTrackBuilder> &theB,const reco::BeamSpot &beamSpot, const TLorentzVector &J);
-    vector<float> CalcDLS(vector<TransientTrack> tracksVector,  TransientVertex CMSFittedVtx,const reco::BeamSpot &beamSpot);
+    vector<float> DecayLengthSignificance(vector<TransientTrack> tracksVector,  TransientVertex CMSFittedVtx,const reco::BeamSpot &beamSpot);
     float GetSimilarity(float *v1, float *v2, ROOT::Math::SMatrix<float,3> M);
     void FindTriggerBits(const HLTConfigProvider& trigConf);
     void SelectTriggerBits(const edm::Handle<edm::TriggerResults>& HLTR);
     void PrintTriggerBits();
-    // mc
+    // for MC generator level
     const reco::Candidate* GetFinalState(const reco::Candidate* particle, const int id);
     void SelectMCGen(const edm::Handle<reco::GenParticleCollection>& genParticles);
     bool CheckParents(const reco::Candidate *c1,const reco::Candidate *c2);
 
+    // storage
     TFile* file;
     TTree* tree;
-    //General info
+
+    // jet correction label
+    std::string mJetCorr;
+
+    // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+    // >>>>>>>>>>>>>>>> event variables >>>>>>>>>>>>>>>>>>>>>>>
+    // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+    // (their description given when tree branches are created)
+    // event
     unsigned int _evRunNumber;
     unsigned int _evEventNumber;
+
+    // number of processed events
     int Nevt;
+    // number of selected events
     int Nsel;
-    int _flagGEN;
-    // Jet correction label
-    std::string mJetCorr;
-    // Missing momentum
+    // generator or reconstructed level
+    int flagGEN;
+
+    // missing momentum
     float metPx;
     float metPy;
     float metPt;
     float metPhi;
 
-    //Electrons
-    static const int Maxel=100;
+    // electrons
+    static const int Maxel = 100; // maximum number of electrons
     int Nel;
     float el_pt[Maxel];
     float el_eta[Maxel];
@@ -168,12 +167,11 @@ class Analyzer : public edm::EDAnalyzer {
     float el_theta[Maxel];
     float el_phi[Maxel];
     float el_mt[Maxel];
-    ///
     float el_convDist[Maxel];
     float el_convDcot[Maxel];
     int el_mh[Maxel];
 
-    //Muons
+    // muons
     static const int Maxmu=100;
     int Nmu;
     float mu_pt[Maxmu];
@@ -182,7 +180,6 @@ class Analyzer : public edm::EDAnalyzer {
     float mu_theta[Maxmu];
     float mu_phi[Maxmu];
     float mu_mt[Maxmu];
-    ///extras
     int mu_ValidHits[Maxmu];
     int mu_PixelHits[Maxmu];
     float mu_imp[Maxmu];
@@ -200,7 +197,7 @@ class Analyzer : public edm::EDAnalyzer {
     float j_m[Maxjet];
     int j_DsInJ[Maxjet];
     int j_DInJ[Maxjet];
-    //D*
+    // D* mesons
     int DsCand;
     static const int MaxDs=1000;
     float ds_pt[MaxDs];
@@ -211,7 +208,7 @@ class Analyzer : public edm::EDAnalyzer {
     float vcy[MaxDs];
     float vcz[MaxDs];
     float dmDs[MaxDs];
-    //d0
+    // D0 mesons
     float D0dl[MaxDs];
     float D0dlEr[MaxDs];
     float D0dls[MaxDs];
@@ -219,9 +216,9 @@ class Analyzer : public edm::EDAnalyzer {
     float D0sv_x[MaxDs];
     float D0sv_y[MaxDs];
     float D0sv_z[MaxDs];
-    // D+-
+    // D+ mesons
     int DCand;
-    static const int MaxD=20000;
+    static const int MaxD = 20000;
     float d_pt[MaxD];
     float d_eta[MaxD];
     float d_phi[MaxD];
@@ -234,14 +231,14 @@ class Analyzer : public edm::EDAnalyzer {
     float Dsv_y[MaxD];
     float Dsv_z[MaxD];
 
+    // trigger information
     int _triggers;
     edm::InputTag _inputTagTriggerResults;
     std::vector<std::vector<int> > _vecTriggerBits;
     std::vector<std::string> _vecTriggerNames;
     edm::InputTag _inputTagMCgen;
 
-
-    //mc
+    // MC generator level
     int mcDspWm=0;
     int mcDsmWp=0;
     int mcDpWm=0;
@@ -250,161 +247,155 @@ class Analyzer : public edm::EDAnalyzer {
     int mcCmumWp=0;
     int mcEventType=0;
     int cGen;
-
     int CWm=0;
     int CbWp=0;
-
-
-    //
 };
 
 //
-// constants, enums and typedefs
-//
-
-//
-// static data member definitions
-//
-
-//
-// constructors and destructor
+// constructor
 //
 Analyzer::Analyzer(const edm::ParameterSet& iConfig)
-
 {
+  // for proper log files writing (immediate output)
   setbuf(stdout, NULL);
+
+  // output file
   std::string fileout = iConfig.getParameter<std::string>("outFile");
   file = new TFile(fileout.c_str(), "recreate");
+  // output tree
   tree = new TTree("tree", "spam");
 
-  //h1  = new TH1F("h1","{p_{t}(#mu)}",300,0.,100.);
-  //h2  = new TH1F("h2","{p_{t}(e)}",300,0.,100.);
-  //now do what ever initialization is needed
-  Nevt=0;
-  Nsel=0;
-  //general
+  Nevt=0; // number of processed events
+  Nsel=0; // number of selected events
+
+  // input tags
   _inputTagTriggerResults = edm::InputTag("TriggerResults", "", "HLT");
   _inputTagMCgen = edm::InputTag("genParticles");
-  _flagGEN = iConfig.getParameter<int>("gen");
+  flagGEN = iConfig.getParameter<int>("gen"); // if true, generator level processed (works only for MC)
   // jet correction label
-  mJetCorr = "ak5PFL1FastL2L3Residual";
+  mJetCorr = "ak5PFL1FastL2L3Residual"; // jet correction label
 
-
+  // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+  // >>>>>>> tree branches >>>>>>>>>>>>
+  // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+  //
+  // event
   tree->Branch("evRunNumber",&_evRunNumber,"evRunNumber/i");
   tree->Branch("evEventNumber",&_evEventNumber,"evEventNumber/i");
 
-  // missing nrg
+  // missing momentum
   tree->Branch("metPx",&metPx,"metPx/F");
   tree->Branch("metPy",&metPy,"metPy/F");
 
-  //el
-  tree->Branch("Nel",&Nel,"Nel/I");
-  tree->Branch("el_pt",&el_pt,"el_pt[Nel]/F");
-  tree->Branch("el_eta",&el_eta,"el_eta[Nel]/F");
-  tree->Branch("el_isolat",&el_isolat,"el_isolat[Nel]/F");
-  tree->Branch("el_phi",&el_phi,"el_phi[Nel]/F");
-  tree->Branch("el_mt",&el_mt,"el_mt[Nel]/F");
-  ///extras
-  tree->Branch("el_convDist",&el_convDist,"el_convDist[Nel]/F");
-  tree->Branch("el_convDcot",&el_convDcot,"el_convDcot[Nel]/F");
-  tree->Branch("el_mh",&el_mh,"el_mh[Nel]/I");
+  // electrons
+  tree->Branch("Nel",&Nel,"Nel/I"); // number of electrons
+  tree->Branch("el_pt",&el_pt,"el_pt[Nel]/F"); // electron pT
+  tree->Branch("el_eta",&el_eta,"el_eta[Nel]/F"); // electron pseudorapidity
+  tree->Branch("el_isolat",&el_isolat,"el_isolat[Nel]/F"); // electron isolation
+  tree->Branch("el_phi",&el_phi,"el_phi[Nel]/F"); // electron phi
+  tree->Branch("el_mt",&el_mt,"el_mt[Nel]/F"); // reconstructed transverse mass
+  tree->Branch("el_convDist",&el_convDist,"el_convDist[Nel]/F"); // (not used) electron conversion distance
+  tree->Branch("el_convDcot",&el_convDcot,"el_convDcot[Nel]/F"); // (not used) electron conversion cotangent
+  tree->Branch("el_mh",&el_mh,"el_mh[Nel]/I"); // electron missing hits number
 
 
   //mu
-  tree->Branch("Nmu",&Nmu,"Nmu/I");
-  tree->Branch("mu_pt",&mu_pt,"mu_pt[Nmu]/F");
-  tree->Branch("mu_eta",&mu_eta,"mu_eta[Nmu]/F");
-  tree->Branch("mu_isolat",&mu_isolat,"mu_isolat[Nmu]/F");
-  tree->Branch("mu_phi",&mu_phi,"mu_phi[Nmu]/F");
-  tree->Branch("mu_mt",&mu_mt,"mu_mt[Nmu]/F");
+  tree->Branch("Nmu",&Nmu,"Nmu/I"); // number of muons
+  tree->Branch("mu_pt",&mu_pt,"mu_pt[Nmu]/F"); // muon pT
+  tree->Branch("mu_eta",&mu_eta,"mu_eta[Nmu]/F"); // muon pseudorapidity
+  tree->Branch("mu_isolat",&mu_isolat,"mu_isolat[Nmu]/F"); // muon isolation
+  tree->Branch("mu_phi",&mu_phi,"mu_phi[Nmu]/F"); // muon phi
+  tree->Branch("mu_mt",&mu_mt,"mu_mt[Nmu]/F"); // muon transverse mass
   ///extras
-  tree->Branch("mu_ValidHits",&mu_ValidHits,"mu_ValidHits[Nmu]/I");
-  tree->Branch("mu_PixelHits",&mu_PixelHits,"mu_PixelHits[Nmu]/I");
-  tree->Branch("mu_imp",&mu_imp,"mu_imp[Nmu]/F");
-  tree->Branch("mu_nChi2",&mu_nChi2,"mu_nChi2[Nmu]/F");
+  tree->Branch("mu_ValidHits",&mu_ValidHits,"mu_ValidHits[Nmu]/I"); // muon valid hits number
+  tree->Branch("mu_PixelHits",&mu_PixelHits,"mu_PixelHits[Nmu]/I"); // muon pixel hits number
+  tree->Branch("mu_imp",&mu_imp,"mu_imp[Nmu]/F"); // muon impact parameter
+  tree->Branch("mu_nChi2",&mu_nChi2,"mu_nChi2[Nmu]/F"); // muon track number of degrees of freedom
 
   // primaru vertex
-  tree->Branch("pv_x",&pv_x,"pv_x/F");
-  tree->Branch("pv_y",&pv_y,"pv_y/F");
-  tree->Branch("pv_z",&pv_z,"pv_z/F");
+  tree->Branch("pv_x",&pv_x,"pv_x/F"); // primary vertex x component
+  tree->Branch("pv_y",&pv_y,"pv_y/F"); // primary vertex y component
+  tree->Branch("pv_z",&pv_z,"pv_z/F"); // primary vertex z component
 
   // D*
-  tree->Branch("DsCand",&DsCand,"DsCand/I");
-  tree->Branch("dmDs",&dmDs,"dmDs[DsCand]/F");
-  tree->Branch("vcx",&vcx,"vcx[DsCand]/F");
-  tree->Branch("vcy",&vcy,"vcy[DsCand]/F");
-  tree->Branch("vcz",&vcz,"vcz[DsCand]/F");
-  tree->Branch("ds_pt",&ds_pt,"ds_pt[DsCand]/F");
-  tree->Branch("ds_eta",&ds_eta,"ds_eta[DsCand]/F");
-  tree->Branch("ds_m",&ds_m,"ds_m[DsCand]/F");
-  tree->Branch("ds_phi",&ds_phi,"ds_phi[DsCand]/F");
+  tree->Branch("DsCand",&DsCand,"DsCand/I"); // number of D* candidates
+  tree->Branch("dmDs",&dmDs,"dmDs[DsCand]/F"); // D* mass
+  tree->Branch("vcx",&vcx,"vcx[DsCand]/F"); // distance between D0 vertex and slow pion track, x component
+  tree->Branch("vcy",&vcy,"vcy[DsCand]/F"); // distance between D0 vertex and slow pion track, y component
+  tree->Branch("vcz",&vcz,"vcz[DsCand]/F"); // distance between D0 vertex and slow pion track, z component
+  tree->Branch("ds_pt",&ds_pt,"ds_pt[DsCand]/F"); // D* pT
+  tree->Branch("ds_eta",&ds_eta,"ds_eta[DsCand]/F"); // D* eta
+  tree->Branch("ds_m",&ds_m,"ds_m[DsCand]/F"); // D* mass
+  tree->Branch("ds_phi",&ds_phi,"ds_phi[DsCand]/F"); // D* phi
   // D0
-  //	tree->Branch("D0Cand",&D0Cand,"D0Cand/I");
-  tree->Branch("D0dl",&D0dl,"D0dl[DsCand]/F");
-  tree->Branch("D0dlEr",&D0dlEr,"D0dlEr[DsCand]/F");
-  tree->Branch("D0dls",&D0dls,"D0dls[DsCand]/F");
+  tree->Branch("D0dl",&D0dl,"D0dl[DsCand]/F"); // D0 decay length
+  tree->Branch("D0dlEr",&D0dlEr,"D0dlEr[DsCand]/F"); // D0 decay length uncertainty
+  tree->Branch("D0dls",&D0dls,"D0dls[DsCand]/F"); // D0 decay length significance
   // secondary vertex
-  tree->Branch("D0sv_x",D0sv_x,"D0sv_x[DsCand]/F");
-  tree->Branch("D0sv_y",D0sv_y,"D0sv_y[DsCand]/F");
-  tree->Branch("D0sv_z",D0sv_z,"D0sv_z[DsCand]/F");
-  // D+-
-  tree->Branch("DCand",&DCand,"DCand/I");
-  tree->Branch("d_pt",&d_pt,"d_pt[DCand]/F");
-  tree->Branch("d_eta",&d_eta,"d_eta[DCand]/F");
-  tree->Branch("d_phi",&d_phi,"d_phi[DCand]/F");
-  tree->Branch("d_m",&d_m,"d_m[DCand]/F");
-  tree->Branch("Ddl",&Ddl,"Ddl[DCand]/F");
-  tree->Branch("DdlEr",&DdlEr,"DdlEr[DCand]/F");
-  tree->Branch("Ddls",&Ddls,"Ddls[DCand]/F");
+  tree->Branch("D0sv_x",D0sv_x,"D0sv_x[DsCand]/F"); // D0 secondary vertex x component
+  tree->Branch("D0sv_y",D0sv_y,"D0sv_y[DsCand]/F"); // D0 secondary vertex y component
+  tree->Branch("D0sv_z",D0sv_z,"D0sv_z[DsCand]/F"); // D0 secondary vertex z component
+  // D+
+  tree->Branch("DCand",&DCand,"DCand/I"); // number of D+ candidates
+  tree->Branch("d_pt",&d_pt,"d_pt[DCand]/F"); // D+ pT
+  tree->Branch("d_eta",&d_eta,"d_eta[DCand]/F"); // D+ eta
+  tree->Branch("d_phi",&d_phi,"d_phi[DCand]/F"); // D+ phi
+  tree->Branch("d_m",&d_m,"d_m[DCand]/F"); // D+ mass
+  tree->Branch("Ddl",&Ddl,"Ddl[DCand]/F"); // D+ decay length
+  tree->Branch("DdlEr",&DdlEr,"DdlEr[DCand]/F"); // D+ decay length uncertainty
+  tree->Branch("Ddls",&Ddls,"Ddls[DCand]/F"); // D+ decay length significance
   // secondary vertex
-  tree->Branch("Dsv_x",Dsv_x,"Dsv_x[DCand]/F");
-  tree->Branch("Dsv_y",Dsv_y,"Dsv_y[DCand]/F");
-  tree->Branch("Dsv_z",Dsv_z,"Dsv_z[DCand]/F");
+  tree->Branch("Dsv_x",Dsv_x,"Dsv_x[DCand]/F"); // D+ secondary vertex x component
+  tree->Branch("Dsv_y",Dsv_y,"Dsv_y[DCand]/F"); // D+ secondary vertex y component
+  tree->Branch("Dsv_z",Dsv_z,"Dsv_z[DCand]/F"); // D+ secondary vertex z component
 
-
-  //jets
-  tree->Branch("Njet",&Njet,"Njet/I");
-  tree->Branch("j_pt",&j_pt,"j_pt[Njet]/F");
-  tree->Branch("j_eta",&j_eta,"j_eta[Njet]/F");
-  tree->Branch("j_m",&j_m,"j_m[Njet]/F");
-  tree->Branch("j_phi",&j_phi,"j_phi[Njet]/F");
-  tree->Branch("j_DsInJ",&j_DsInJ,"j_DsInJ[Njet]/I");
-  tree->Branch("j_DInJ",&j_DInJ,"j_DInJ[Njet]/I");
+  // jets
+  tree->Branch("Njet",&Njet,"Njet/I"); // number of jets
+  tree->Branch("j_pt",&j_pt,"j_pt[Njet]/F"); // jet pT
+  tree->Branch("j_eta",&j_eta,"j_eta[Njet]/F"); // jet eta
+  tree->Branch("j_m",&j_m,"j_m[Njet]/F"); // jet mass
+  tree->Branch("j_phi",&j_phi,"j_phi[Njet]/F"); // jet phi
+  tree->Branch("j_DsInJ",&j_DsInJ,"j_DsInJ[Njet]/I"); // reference to D* candidate
+  tree->Branch("j_DInJ",&j_DInJ,"j_DInJ[Njet]/I"); // reference to D+ candidate
   //triggers
-  tree->Branch("Triggers", &_triggers, "Triggers/I");
+  tree->Branch("Triggers", &_triggers, "Triggers/I"); // trigger bits
+  // muon trigger names
   _vecTriggerNames.push_back("HLT_IsoMu24");
+  // electron trigger names
   _vecTriggerNames.push_back("HLT_Ele27");
   _vecTriggerNames.push_back("Ele32");
 
   // MC generated info
-  if(_flagGEN)
+  if(flagGEN)
   {
-    /*	tree->Branch("mcDsmWp",&mcDsmWp,"mcDsmWp/I");
-        tree->Branch("mcDpWm",&mcDpWm,"mcDpWm/I");
-        tree->Branch("mcDmWp",&mcDmWp,"mcDmWp/I");
-        tree->Branch("mcCmupWm",&mcCmupWm,"mcCmupWm/I");
-        tree->Branch("mcCmumWp",&mcCmumWp,"mcCmumWp/I");*/
+    // MC generator levl final state
+    // mcEventType = 1: D*+ W-
+    // mcEventType = 2: D+ W-
+    // mcEventType = 3: mu+ W-
+    // mcEventType = 4: D*- W+
+    // mcEventType = 5: D- W+
+    // mcEventType = 6: mu- W+
+    // mcEventType = 0: anything else
+    // D mesons and muons are from charm
+    // positive values for W decaying to muons, negative values for W decaying to electrons
     tree->Branch("mcEventType",&mcEventType,"mcEventType/I");
+    // number of charm quarks
     tree->Branch("cGen",&cGen,"cGen/I");
-    /*tree->Branch("mcDspWm",&mcDspWm,"mcDspWm/I");
-        tree->Branch("mcDspWm",&mcDspWm,"mcDspWm/I");
-        tree->Branch("mcDspWm",&mcDspWm,"mcDspWm/I");
-        tree->Branch("mcDspWm",&mcDspWm,"mcDspWm/I"); */
   }
 }
 
 
+// destructor
 Analyzer::~Analyzer()
 {
-
-
-  // do anything here that needs to be done at desctruction time
-  // (e.g. close files, deallocate resources etc.)
+  // close files, deallocate resources etc.
   file->cd();
   tree->Write();
   file->Close();
-  if(this->_flagGEN)
+
+  if(this->flagGEN)
   {
+    // MC generator level info printout
     printf("D*+ W-: %f%%\n",100.*mcDspWm/CWm);
     printf("D*- W+: %f%%\n",100.* mcDsmWp/CbWp);
     printf("D+ W-: %f%%\n",100.*mcDpWm/CWm);
@@ -414,7 +405,7 @@ Analyzer::~Analyzer()
     printf("c W-   %d, cbar W+     %d \n",CWm,CbWp);
   }
 
-
+  // print total number of processed and selected events
   printf("Processed %d events, selected %d\n", Nevt, Nsel);
 }
 
@@ -423,13 +414,13 @@ Analyzer::~Analyzer()
 // member functions
 //
 
-
-void Analyzer::SelectEvt(const edm::Event& iEvent){
+// Store event info (fill corresponding tree variables)
+void Analyzer::SelectEvent(const edm::Event& iEvent){
   _evRunNumber=iEvent.id().event();
-  //cout << "Event: " << evt << endl;
   _evEventNumber=iEvent.id().run();
 }
 
+// Missing transverse energy (MET) selection
 void Analyzer::SelectMET(const edm::Event& iEvent){
   edm::Handle<edm::View<reco::PFMET> > pfmets; // Handle<reco::PFMET> mets;  didn't work for some reason
   iEvent.getByLabel("pfMet",pfmets);
@@ -439,24 +430,34 @@ void Analyzer::SelectMET(const edm::Event& iEvent){
   metPhi=(pfmets->front()).phi();
 }
 
+// get final-state stable generator level particle with required id
+// (if not found, return NULL pointer)
 const reco::Candidate* Analyzer::GetFinalState(const reco::Candidate* particle, const int id){
+  // loop over daughters
   for(unsigned int i = 0; i < particle->numberOfDaughters(); i++)
   {
     const reco::Candidate* daughter = particle->daughter(i);
+    // if this daughter has required id, return its pointer
     if(daughter->pdgId() == id )
       return daughter;
+    // otherwise call itself recursively
     const reco::Candidate* result = GetFinalState(daughter, id);
+    // return the result of the recursive call
     if(result)
       return result;
   }
+  // if gets here, there are no daughter with required id: return NULL pointer
   return NULL;
 }
 
+// check whether two particles have same parents
 bool Analyzer::CheckParents(const reco::Candidate *c1,const reco::Candidate *c2){
   if (c1->numberOfMothers()!=c2->numberOfMothers())
     return false;
-  else{
-    for(unsigned int x=0;x<c2->numberOfMothers();x++){
+  else
+  {
+    for(unsigned int x=0;x<c2->numberOfMothers();x++)
+    {
       if (c2->mother(x)!=c1->mother(x))
         return false;
     }
@@ -464,7 +465,10 @@ bool Analyzer::CheckParents(const reco::Candidate *c1,const reco::Candidate *c2)
   return true;
 }
 
+// select MC generator level information
+// (analysis specific ttbar dileptonic decay)
 void Analyzer::SelectMCGen(const edm::Handle<reco::GenParticleCollection>& genParticles){
+  // initialise all variables with default values
   const reco::Candidate* Wp = NULL;
   const reco::Candidate* Wm = NULL;
   const reco::Candidate* Lp = NULL;
@@ -489,50 +493,56 @@ void Analyzer::SelectMCGen(const edm::Handle<reco::GenParticleCollection>& genPa
   const reco::Candidate* Pi2m = NULL;
   const reco::Candidate* D0 = NULL;
   const reco::Candidate* D0b = NULL;
+
   mcEventType=0;
   cGen=0;
   int WGen=0;
-  //const vector <reco::Candidate*> Cwcand;
   bool sign=false;
   const reco::Candidate* W = NULL;
 
-  for(unsigned int p = 0; p < genParticles->size(); p++) {
+  // loop over generated particeles looking for W bosons
+  for(unsigned int p = 0; p < genParticles->size(); p++)
+  {
     const reco::Candidate* prt = &genParticles->at(p);
-    if (abs(prt->pdgId())==24 && prt->status()==3){
+    if (abs(prt->pdgId())==24 && prt->status()==3)
+    {
       WGen+=1;
       sign=((prt->pdgId())<0);
-      W= (sign ? Wm : Wp);
+      W = (sign ? Wm : Wp);
       W = prt;
     }
   }
-  //	printf("1 prnt\n");
 
-  if (WGen!=1 ){
-    printf("Achtung! Number of W in event isn't ONE! This event will be skipped.\n");
+  // check that there is exactly one W boson in event
+  if (WGen!=1 )
+  {
+    printf("Error! Number of W in event isn't ONE! This event will be skipped.\n");
     return;
   }
+
+  // reference to charm (anti)quark pointer
   const reco::Candidate*& c = (sign ? C : Cb);
 
   // check if the numbers of c(cbar) is odd
-  for(unsigned int p = 0; p < genParticles->size(); p++) {
+  for(unsigned int p = 0; p < genParticles->size(); p++)
+  {
     const reco::Candidate* prt = &genParticles->at(p);
-    if ((prt->pdgId()==(sign? 4: -4)) && prt->status()==3){
-      if (CheckParents(W,prt) && prt->pt()>25. && abs(prt->eta())<2.5){
+    if ((prt->pdgId()==(sign? 4: -4)) && prt->status()==3)
+    {
+      if (CheckParents(W,prt) && prt->pt()>25. && abs(prt->eta())<2.5)
+      {
         c=prt;
         cGen++;
       }
     }
   }
-  //	printf("charm %p \n",c);
-  //	printf("2 prnt\n");
-  if (cGen%2==0 ){
-    //printf("Warning! Number of Charm quarks in event is even! This event will be skipped.\n");
+  if (cGen%2==0 )
     return;
-  }
 
   // in case the numbers of c(cbar) is odd and single W are present in event
-  if ((cGen%2)!=0 && WGen==1 ){
-
+  if ((cGen%2)!=0 && WGen==1 )
+  {
+    // prepare references to decay particles pointers
     const reco::Candidate*& l = (sign ? Lm : Lp);
     const reco::Candidate*& nu = (sign ? Nub : Nu);
     const reco::Candidate*& D = (sign ? Dp : Dm);
@@ -543,99 +553,108 @@ void Analyzer::SelectMCGen(const edm::Handle<reco::GenParticleCollection>& genPa
     const reco::Candidate*& Pi2 = (sign ? Pi2p : Pi2m);
     const reco::Candidate*& d0 = (sign ? D0 : D0b);
 
-
     // find W -> lnu decay
-    for(unsigned int d = 0; d < W->numberOfDaughters(); d++) {
+    for(unsigned int d = 0; d < W->numberOfDaughters(); d++)
+    {
       const reco::Candidate* daughter = W->daughter(d);
       if(daughter->status() != 3)
         continue;
       // electron
-      if(daughter->pdgId() == (sign ? 11 : -11) && daughter->pt()>35.){
+      if(daughter->pdgId() == (sign ? 11 : -11) && daughter->pt()>35.)
+      {
         if(l) printf("Error: multiple hard-scattering l\n");
         l = daughter;
       }
-      if(daughter->pdgId() == (sign ? -12 : 12)){
+      if(daughter->pdgId() == (sign ? -12 : 12))
+      {
         if(nu) printf("Error: multiple hard-scattering nu\n");
         nu = daughter;
       }
       // muon
-      if(daughter->pdgId() == (sign ? 13 : -13) && daughter->pt()>25.){
+      if(daughter->pdgId() == (sign ? 13 : -13) && daughter->pt()>25.)
+      {
         if(l) printf("Error: multiple hard-scattering l\n");
         l = daughter;
       }
-      if(daughter->pdgId() == (sign ? -14 : 14)){
+      if(daughter->pdgId() == (sign ? -14 : 14))
+      {
         if(nu) printf("Error: multiple hard-scattering nu\n");
         nu = daughter;
       }
 
     }
 
+    // check that lepton and neutrino were found
     if(!l || !nu)
       return;
+
+    // eta generator level kinematic space
     if (abs(l->eta())>2.1)
       return;
-    //	printf("prnt 3: l %p\n",l);
 
-    (sign? CWm++ : CbWp++);
+    // increment number of events
+    (sign ? CWm++ : CbWp++);
 
-    // get final states
-
+    // get charm final states
     D=(sign ? GetFinalState( c, 411): GetFinalState( c, -411)); //411 D+
     Ds=(sign ? GetFinalState( c, 413): GetFinalState( c, -413)); //413 D*+
     cmu=(sign ? GetFinalState( c, -13): GetFinalState( c, 13)); // 13 mu-
-    //	printf("prnt 4 D: %p Ds: %p cmu: %p\n",D,Ds,cmu);
-    if (D){
-      //	printf("Found D\n");
-      if (D->numberOfDaughters()==3){
 
-        //		printf("3 daughters: %d %d %d\n", D->daughter(0)->pdgId(), D->daughter(1)->pdgId(), D->daughter(2)->pdgId());
-        for(unsigned int d = 0; d < D->numberOfDaughters(); d++){
+    // D+ -> K pi pi
+    if (D)
+    {
+      if (D->numberOfDaughters()==3)
+      {
+        for(unsigned int d = 0; d < D->numberOfDaughters(); d++)
+        {
           const reco::Candidate* prt = D->daughter(d);
           if (prt->pdgId()==(sign ? -321 : 321)) // 321  K+
             K=prt;
-
           if (prt->pdgId()==(sign ? 211 : -211) && !Pi1) // 211 Pi+
             Pi1=prt;
           if (prt->pdgId()==(sign ? 211 : -211) && (*&prt!= *&Pi1))
             Pi2=prt;
         }
-        //			printf("3 daughters: %p %p %p\n", K, Pi1, Pi2);
-        if(K && Pi1 && Pi2){ //C W-
-          //printf("3 dauhters found\n");
-
-          if(sign){
-            //	printf("Found D+ W-\n");
-            if(Km->pdgId()==-321 && Pi1p->pdgId()==211 && Pi2p->pdgId()==211){
+        if(K && Pi1 && Pi2)
+        { // c W-
+          if(sign)
+          {
+            if(Km->pdgId()==-321 && Pi1p->pdgId()==211 && Pi2p->pdgId()==211)
+            {
               mcEventType=2;
               mcDpWm++;
             }
           }
-          // Cbar W+
-          else{
-            //		printf("Found D W+\n");
-            if(Kp->pdgId()==321 && Pi1m->pdgId()==-211 && Pi2m->pdgId()==-211){
+          // cbar W+
+          else
+          {
+            if(Kp->pdgId()==321 && Pi1m->pdgId()==-211 && Pi2m->pdgId()==-211)
+            {
               mcEventType=5;
               mcDmWp++;
             }
           }// W+
-        }// all tracks are ok
+        }// all daughters are ok
       }//num of candiadate == 3
     }
 
-    //	printf("c: %p\n", c);
-    if (Ds){
-      //		printf("Found Ds\n");
-      if(Ds->numberOfDaughters()==2){
-
-        for(unsigned int d = 0; d < Ds->numberOfDaughters(); d++){
+    // D* -> D0(K pi) pi
+    if (Ds)
+    {
+      if(Ds->numberOfDaughters()==2)
+      {
+        for(unsigned int d = 0; d < Ds->numberOfDaughters(); d++)
+        {
           const reco::Candidate* prt = Ds->daughter(d);
           if (prt->pdgId()==(sign ? 421 : -421))  //421  D0
             d0=prt;
           if (prt->pdgId()==(sign ? 211 : -211))  // 211 Pi+
             Pi1=prt;
         }
-        if(d0 && Pi1 && d0->numberOfDaughters()==2){
-          for(unsigned int d2 = 0; d2 < d0->numberOfDaughters(); d2++){
+        if(d0 && Pi1 && d0->numberOfDaughters()==2)
+        {
+          for(unsigned int d2 = 0; d2 < d0->numberOfDaughters(); d2++)
+          {
             const reco::Candidate* prt2 = d0->daughter(d2);
             if ((prt2->pdgId())==(sign? 211 : -211))
               Pi2=prt2;
@@ -644,17 +663,19 @@ void Analyzer::SelectMCGen(const edm::Handle<reco::GenParticleCollection>& genPa
           }
 
           if (K && Pi1 && Pi2){
-            if (sign){ // c W-
-              //printf("Found D*+ W-\n");
-              if(Km->pdgId()==-321 && Pi1p->pdgId()==211 && Pi2p->pdgId()==211 && D0->pdgId()==421){
+            if (sign)
+            { // c W-
+              if(Km->pdgId()==-321 && Pi1p->pdgId()==211 && Pi2p->pdgId()==211 && D0->pdgId()==421)
+              {
                 mcEventType=1;
                 mcDspWm++;
               }
             }
 
-            else{ // cbar W+
-              //printf("Found D*- W+\n");
-              if(Kp->pdgId()==321 && Pi1m->pdgId()==-211 && Pi2m->pdgId()==-211 && D0b->pdgId()==-421){
+            else
+            { // cbar W+
+              if(Kp->pdgId()==321 && Pi1m->pdgId()==-211 && Pi2m->pdgId()==-211 && D0b->pdgId()==-421)
+              {
                 mcEventType=4;
                 mcDsmWp++;
               }
@@ -665,20 +686,18 @@ void Analyzer::SelectMCGen(const edm::Handle<reco::GenParticleCollection>& genPa
     }//D* end
 
     // c->mu
-    if (cmu){
-      // printf("Found c->mu\n");
+    if (cmu)
+    {
       if (sign)
       { // c W-
         if (cmu->pdgId()==-13)
         {
-          // printf("Found c->mu+ W-\n");
           mcEventType=3;
           mcCmupWm++;
         }
       }
       else
       { // cbar W+
-        // printf("Found cbar->mu- W+\n");
         if (cmu->pdgId()==13)
         {
           mcEventType=6;
@@ -688,31 +707,35 @@ void Analyzer::SelectMCGen(const edm::Handle<reco::GenParticleCollection>& genPa
     }
     if (abs(l->pdgId())==11)
       mcEventType*=-1;
-  }/// W and charm have same parent
+  }
 }
 
 
-
-void Analyzer::SelectEl(const edm::Event& iEvent){
-
+// electron selection
+void Analyzer::SelectEl(const edm::Event& iEvent)
+{
   Handle<reco::GsfElectronCollection> electrons;
   iEvent.getByLabel("gsfElectrons",electrons);
   Nel=0;
   float pt,eta, phi_l,iso,mt;
 
-  // loop through electrons in the event
-  for( reco::GsfElectronCollection::const_iterator it= electrons->begin(); it !=electrons->end(); it++) {
+  // loop over electrons
+  for( reco::GsfElectronCollection::const_iterator it= electrons->begin(); it !=electrons->end(); it++)
+  {
     pt=it->pt();
     eta=it->eta();
     phi_l=it->phi();
     iso=(it->dr03TkSumPt()+it->dr03EcalRecHitSumEt() +it->dr03HcalTowerSumEt())/(it->pt());
 
-    if (Nel<Maxel){
-      if (pt>20. && (abs(eta)<1.44 || (abs(eta)>1.57 && abs(eta)<2.5) ) && iso < 0.05){
-
-        // calc mt
+    if (Nel<Maxel)
+    {
+      // selection: pT > 20 GeV, |eta| < 2.5 excluding [1.44,1.57], iso < 0.05
+      if (pt>20. && (abs(eta)<1.44 || (abs(eta)>1.57 && abs(eta)<2.5) ) && iso < 0.05)
+      {
+        // missing transverse mass
         mt=sqrt(2.0*pt*metPt*(1.0-cos(phi_l-metPhi)));
 
+        // store electron quantities
         el_pt[Nel]=pt*it->charge();
         el_eta[Nel]=eta;
         el_theta[Nel]=it->theta();
@@ -725,84 +748,77 @@ void Analyzer::SelectEl(const edm::Event& iEvent){
         Nel++;
       }
     }
-    else {
+    else
+    {
       printf("Maximum number of electrons %d reached, skipping the rest\n", Maxel);
       return;
     }
-
-  }	// end the loop through electrons in the event
-
+  }
 }
 
-void Analyzer::SelectMu(const edm::Event& iEvent, const reco::BeamSpot &beamSpot){
-
-  //Handle<reco::TrackCollection> gmuons;
-  //iEvent.getByLabel("globalMuons", gmuons);
+// muon selection
+void Analyzer::SelectMu(const edm::Event& iEvent, const reco::BeamSpot &beamSpot)
+{
   edm::Handle<reco::MuonCollection> gmuons;
   iEvent.getByLabel("muons", gmuons);
   Nmu=0;
-  float pt,eta, phi_l,iso,mt;//,phi_Em, mt, Em;
 
   math::XYZPoint point(beamSpot.position());
 
-  for( reco::MuonCollection::const_iterator it= gmuons->begin(); it !=gmuons->end(); it++) {
+  // loop over muons
+  for( reco::MuonCollection::const_iterator it= gmuons->begin(); it !=gmuons->end(); it++)
+  {
     if((it->globalTrack()).isNull())
       continue;
-    pt=it->pt();
-    eta=it->eta();
-    phi_l=it->phi();
+    double pt=it->pt();
+    double eta=it->eta();
+    double phi_l=it->phi();
 
-
-    if (Nmu<Maxmu){
-      if ((abs(eta)<2.4)){
+    // check that maximum number of events is not exceeded
+    if (Nmu<Maxmu)
+    {
+      // selection: |eta| < 2.4 (no pT cut because these muons can be used also for charm semileptonic decays)
+      if ((abs(eta)<2.4))
+      {
         const reco::MuonPFIsolation& iso04 = it->pfIsolationR04();
-        iso = (iso04.sumChargedParticlePt + iso04.sumNeutralHadronEt)/it->pt();
-        
-        mt=sqrt(2.0*pt*metPt*(1.0-cos(phi_l-metPhi)));
-
+        double iso = (iso04.sumChargedParticlePt + iso04.sumNeutralHadronEt)/it->pt();
+        double mt=sqrt(2.0*pt*metPt*(1.0-cos(phi_l-metPhi)));
         mu_pt[Nmu]=pt*it->charge();
         mu_eta[Nmu]=eta;
         mu_theta[Nmu]=it->theta();
         mu_isolat[Nmu]=iso;
         mu_phi[Nmu]=phi_l;
         mu_mt[Nmu]=mt;
-
-        /// extras
         mu_ValidHits[Nmu]=0;
         mu_PixelHits[Nmu]=0;
         const reco::TrackRef& track=it->globalTrack();
         const reco::HitPattern& p = (track)->hitPattern();
-        /// if the hit is valid and in pixel
-        for (int n=0; n<p.numberOfHits(); n++) {
+        // if the hit is valid and in pixel
+        for (int n=0; n<p.numberOfHits(); n++)
+        {
           uint32_t hit = p.getHitPattern(n);
-
-          if (p.validHitFilter(hit) && p.pixelHitFilter(hit)) mu_PixelHits[Nmu]++;
-          if (p.validHitFilter(hit)) mu_ValidHits[Nmu]++;
+          if (p.validHitFilter(hit) && p.pixelHitFilter(hit))
+            mu_PixelHits[Nmu]++;
+          if (p.validHitFilter(hit))
+            mu_ValidHits[Nmu]++;
         }
-        ///
-
         mu_imp[Nmu]=track->dxy(point);
         mu_nChi2[Nmu]=(track->chi2())/(track->ndof());
-        ///extras
-
         Nmu++;
       }
 
     }
-    else {
+    else
+    {
       printf("Maximum number of muons %d reached, skipping the rest\n", Maxmu);
       return;
     }
+  }
+}
 
 
-
-  } //  end the loop through muons in the event
-
-
-} // ends SelectMu func
-
-
-vector<float> Analyzer::CalcDLS(vector<TransientTrack> tracksVector,TransientVertex CMSFittedVtx,const reco::BeamSpot &beamSpot)     {
+// calculate decay length significance: decay length divided by uncertainty on decay length
+vector<float> Analyzer::DecayLengthSignificance(vector<TransientTrack> tracksVector,TransientVertex CMSFittedVtx,const reco::BeamSpot &beamSpot)     {
 
   vector <float> DLValues;
   float Lx = 0.;
@@ -1012,7 +1028,7 @@ void Analyzer::ReconstrDstar(const Handle<reco::TrackCollection> &tracks,const E
             //cout<<"Error! Vertex is invalid"<<endl;
             break;}
 
-          DLvar=CalcDLS(myD0Tracks,D0Vertex,beamSpot);
+          DLvar=DecayLengthSignificance(myD0Tracks,D0Vertex,beamSpot);
           LXY=DLvar[0];
 
           /*	lxyx = (D0Vertex.position()).x()-x0;
@@ -1173,7 +1189,7 @@ void Analyzer::ReconstrD(const Handle<reco::TrackCollection> &tracks,const ESHan
           continue;
         if((*fittedTracks[0]).weight() < 0.001 || (*fittedTracks[1]).weight() < 0.001 || (*fittedTracks[2]).weight() < 0.001)
           continue;
-        vector <float> DLvar=CalcDLS(myDTracks,DVertex,beamSpot);
+        vector <float> DLvar=DecayLengthSignificance(myDTracks,DVertex,beamSpot);
         LXY=DLvar[0];
 
         /*
@@ -1382,11 +1398,11 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
   //iEvent.getByLabel("muons", gmuons);
 
   SelectMET(iEvent);
-  SelectEvt(iEvent);
+  SelectEvent(iEvent);
   Nel=0;
   SelectEl(iEvent);
   SelectMu(iEvent,beamSpot);
-  if(_flagGEN)
+  if(flagGEN)
   {
     iEvent.getByLabel(_inputTagMCgen, genParticles);
     SelectMCGen(genParticles);

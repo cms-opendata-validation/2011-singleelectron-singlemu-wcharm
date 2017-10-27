@@ -16,7 +16,7 @@ TString gBaseDir  = "./";
 // these are "normal" settings
 TString gDataDir  = gBaseDir + "./ntuples-data"; // directory with data ntuples
 TString gMcDir    = gBaseDir + "./ntuples-mc"; // directory with MC ntuples
-//TString gHistDir  = gBaseDir + "./hist"; // directory with histograms
+TString gHistDir  = gBaseDir + "./hist"; // directory with histograms
 TString gPlotsDir = gBaseDir + "./plots"; // directory with final plots
 //
 // For exercises, you could use existing "reference" histograms
@@ -25,7 +25,7 @@ TString gPlotsDir = gBaseDir + "./plots"; // directory with final plots
 // below (and comment out corresponding lines above, of course)
 //TString gDataDir  = gBaseDir + "./ntuples-data-REF";
 //TString gMcDir    = gBaseDir + "./ntuples-mc-REF";
-TString gHistDir  = gBaseDir + "./hist-REF";
+//TString gHistDir  = gBaseDir + "./hist-REF";
 //
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 

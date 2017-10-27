@@ -371,6 +371,7 @@ std::vector<ZYieldWcharm> FigureMassDstar(
         //f_fit->FixParameter(2,0.0005);
         h->Fit("f_fit","IR0");
         f_fit->SetLineColor(4);
+        //f_fit->Draw("same");
         // number of events in the peak
         yield[ch - 1].NReco = f_fit->GetParameter(0) * (TMath::Sqrt(2*TMath::Pi()) * f_fit->GetParameter(2)) / 0.002 / MCSamples.VecMCFactor[mc];
         // uncertainty on this number
@@ -512,11 +513,13 @@ std::vector<ZYieldWcharm> FigureMassDch(
       {
         // fit signal MC
         TF1* f_fit= new TF1("f_fit","gaus(0) + pol1(3)",1.6,2.2);
-        f_fit->SetParameters(300.0,1.8,0.02);
+        f_fit->SetParameters(50.0,1.87,0.02);
+        f_fit->SetParLimits(1,1.85,1.90);
+        f_fit->SetParLimits(2,0.005,0.03);
         //f_fit->FixParameter(2,0.015);
         h->Fit("f_fit","MIR0");
         f_fit->SetLineColor(4);
-        f_fit->Draw("same");
+        //f_fit->Draw("same");
         // number of events in the peak
         yield[ch - 1].NReco = f_fit->GetParameter(0) * (TMath::Sqrt(2.*TMath::Pi()) * f_fit->GetParameter(2)) / 0.012 / MCSamples.VecMCFactor[mc];
         // uncertainty on this number

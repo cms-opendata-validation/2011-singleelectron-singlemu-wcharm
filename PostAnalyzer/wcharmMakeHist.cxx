@@ -112,31 +112,30 @@ int main(int argc, char** argv)
       // MC event weights need to be changed to most precise theoretical predictions,
       // the formula is:
       // weight = lumi / (nevents / sigma_MC) * (sigma_theory / sigma_MC) = lumi / nevents * sigma_theory
-      // However, if we do not other precise theoretical prediction for W + 1jet production,
-      // then we put sigma_theory = sigma_MC and:
-      // weight = lumi / nevents * sigma_MC
+      // sigma_theory = 31314.0
       //
       // Number of events can be obtained from webpage (see http://opendata.cern.ch/collection/CMS-Simulated-Datasets),
       // but it should be checked that all events have been processed at the Analyzer step (see end of log files)
-      // nevents = 72165352
+      // nevents = 78347691
       //
       // MC cross section can be obtained from any ROOT file in the mC sample: open the ROOT file, create TBrowser, navigate to
       // Runs -> GenRunInfoProduct_generator__SIM. -> GenRunInfoProduct_generator__SIM.obj -> InternalXSec -> value_
-      // sigma_MC = 4611.8
+      // sigma_MC = 26677.4
+      // (nevertheless sigma_MC cancels)
       //
       // Now calculate the weight:
-      // weight: 2500.0 / 72165352 * 4611.8 = 0.1598
+      // weight: 2500.0 / 78347691 * 31314.0 = 0.999
       if(flagMC)
       {
         ZEventWcharmRecoInput in;
         //in.MaxNEvents = 1e5;
-        in.Weight = 0.1598; // weight (see above)
+        in.Weight = 0.999; // weight (see above)
         in.Name = "mcSigReco";
         in.Type = 2;
         in.WChannel = wLep;
         in.CharmFinalState = charm;
         in.VecVarHisto = vecVH;
-        in.AddToChain(mcDir + "/W1Jet_TuneZ2_7TeV-madgraph-tauola/*.root");
+        in.AddToChain(mcDir + "/WJetsToLNu_TuneZ2_7TeV-madgraph-tauola/*.root");
         // main part: event reconstruction call for MC signal
         wcharm_eventreco(in);
         // MC other (background): re-use existing ZEventWcharmRecoInput, just change type
