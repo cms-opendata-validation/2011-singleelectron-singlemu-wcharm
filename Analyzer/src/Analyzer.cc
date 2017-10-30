@@ -818,8 +818,8 @@ void Analyzer::SelectMu(const edm::Event& iEvent, const reco::BeamSpot &beamSpot
 
 
 // calculate decay length significance: decay length divided by uncertainty on decay length
-vector<float> Analyzer::DecayLengthSignificance(vector<TransientTrack> tracksVector,TransientVertex CMSFittedVtx,const reco::BeamSpot &beamSpot)     {
-
+vector<float> Analyzer::DecayLengthSignificance(vector<TransientTrack> tracksVector, TransientVertex CMSFittedVtx, const reco::BeamSpot &beamSpot)
+{
   vector <float> DLValues;
   float Lx = 0.;
   float Ly = 0.;
