@@ -41,3 +41,5 @@ Generally, the analysis steps are:
  * run PostAnalyzer/ttbarMakePlots to produce final plots from created histograms (X seconds)
 
 Further description of these steps you can find Analyzer/README.txt and Postanalyzer/README.txt
+
+### Authors: Oleksandr Kot, Oleksandr Zenaiev
