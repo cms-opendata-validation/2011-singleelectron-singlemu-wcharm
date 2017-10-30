@@ -750,6 +750,7 @@ void Analyzer::SelectEl(const edm::Event& iEvent)
     }
     else
     {
+      // skip electron to avoid overflow of allocated arrays
       printf("Maximum number of electrons %d reached, skipping the rest\n", Maxel);
       return;
     }
@@ -761,7 +762,6 @@ void Analyzer::SelectMu(const edm::Event& iEvent, const reco::BeamSpot &beamSpot
 {
   edm::Handle<reco::MuonCollection> gmuons;
   iEvent.getByLabel("muons", gmuons);
-  Nmu=0;
 
   math::XYZPoint point(beamSpot.position());
 
@@ -810,6 +810,7 @@ void Analyzer::SelectMu(const edm::Event& iEvent, const reco::BeamSpot &beamSpot
     }
     else
     {
+      // skip muon to avoid overflow of allocated arrays
       printf("Maximum number of muons %d reached, skipping the rest\n", Maxmu);
       return;
     }
@@ -820,36 +821,33 @@ void Analyzer::SelectMu(const edm::Event& iEvent, const reco::BeamSpot &beamSpot
 // calculate decay length significance: decay length divided by uncertainty on decay length
 vector<float> Analyzer::DecayLengthSignificance(vector<TransientTrack> tracksVector, TransientVertex CMSFittedVtx, const reco::BeamSpot &beamSpot)
 {
-  vector <float> DLValues;
-  float Lx = 0.;
-  float Ly = 0.;
-  float Lz = CMSFittedVtx.position().z() - beamSpot.z0();
-
+  // calculate vector sum
   float PxSum = 0.;
   float PySum = 0.;
   float PtSum = 0.;
-
   for (vector<TransientTrack>::iterator itSumP = tracksVector.begin(); itSumP != tracksVector.end(); itSumP++)
   {
     PxSum += (itSumP->track()).px();
     PySum += (itSumP->track()).py();
   }
-
+  // and its trasverse momentum
   PtSum = sqrt(PxSum*PxSum + PySum*PySum);
 
-  Lx = (CMSFittedVtx.position().x() - (beamSpot.x0() + beamSpot.dxdz()*Lz) );
-  Ly = (CMSFittedVtx.position().y() - (beamSpot.y0() + beamSpot.dydz()*Lz) );
+  float Lx = (CMSFittedVtx.position().x() - (beamSpot.x0() + beamSpot.dxdz()*Lz) );
+  float Ly = (CMSFittedVtx.position().y() - (beamSpot.y0() + beamSpot.dydz()*Lz) );
 
+  // calculate projected decay length
   float ProjectedDecayLength  = 0.;
-  float ProjectedDecayLengthError = 0.;
-  /// calculate DL xy :
   ProjectedDecayLength = (Lx*PxSum + Ly*PySum)/PtSum;
-  // cout<<"DL xy proj = "<<ProjectedDecayLength<<endl;
-  if (ProjectedDecayLength<0){
+  vector <float> DLValues;
+  if (ProjectedDecayLength < 0)
+  {
     DLValues.push_back(-10.);
-    return DLValues;}
-  typedef ROOT::Math::SMatrix<float,3>       SMatrix33;
+    return DLValues;
+  }
 
+  // calculate projected decay uncertainty
+  typedef ROOT::Math::SMatrix<float,3> SMatrix33;
   SMatrix33 DataVertexM;
 
   DataVertexM(0,0) = beamSpot.covariance(0, 0);
@@ -863,11 +861,7 @@ vector<float> Analyzer::DecayLengthSignificance(vector<TransientTrack> tracksVec
   DataVertexM(2,0) = 0;
   DataVertexM(2,1) = 0;
   DataVertexM(2,2) = 0;
-  // }
 
-
-  /// error DL calculation in matrices:
-  /// *********************************  *********************************
   SMatrix33 SumVertexCovM;
 
   float MyVertexError[3][3];
@@ -882,65 +876,56 @@ vector<float> Analyzer::DecayLengthSignificance(vector<TransientTrack> tracksVec
   MyVertexError[2][1] = 0;
   MyVertexError[2][2] = 0;
 
-
-  for (int i =0; i<3; i++)        {
-    for (int j=0; j<3; j++)         {
-
+  for (int i =0; i<3; i++)
+    for (int j=0; j<3; j++)
       SumVertexCovM[i][j] = MyVertexError[i][j] + DataVertexM[i][j];
-    }
-  }
 
-
-  /// Extract DLxy sigma;
   float DLSigma = 0.;
-  float PClusterV[3] = {PxSum, PySum, 0.};                                       /// vector components of the DL 3D
+  float PClusterV[3] = {PxSum, PySum, 0.};
 
   DLSigma = GetSimilarity(PClusterV, PClusterV, SumVertexCovM);
   DLSigma = DLSigma/(PtSum*PtSum);
   DLSigma = sqrt(DLSigma);
-  ProjectedDecayLengthError = DLSigma;
-
-  /// *********************************  *********************************
+  float ProjectedDecayLengthUnc = DLSigma;
 
   DLValues.push_back(ProjectedDecayLength);
-  DLValues.push_back(ProjectedDecayLengthError);
-  DLValues.push_back(ProjectedDecayLength/ProjectedDecayLengthError);
+  DLValues.push_back(ProjectedDecayLengthUnc);
 
-  /// couts:
-
-  //  cout<<"Refit Vtx = "<<CMSFittedVtx.position().x()<<"    VtxY = "<<CMSFittedVtx.position().y()<<"        VtxZ = "<<CMSFittedVtx.position().z()<<endl;
+  // decay length significance
+  DLValues.push_back(ProjectedDecayLength / ProjectedDecayLengthUnc);
 
   return DLValues;
-
 }
 
 
-float Analyzer::GetSimilarity(float *v1, float *v2, ROOT::Math::SMatrix<float,3> M)       {
-  float results = 0.;
+float Analyzer::GetSimilarity(float *v1, float *v2, ROOT::Math::SMatrix<float,3> M)
+{
+  float result = 0.;
   float v_tmp[3] = {0.,0.,0.};
 
-  for (int i =0 ; i<3; i++)       {
-    for (int j=0;j<3;j++)           {
+  for (int i =0 ; i<3; i++)
+    for (int j=0;j<3;j++)
       v_tmp[i] += M[i][j]*v2[j];
-    }
-  }
 
-  for (int z=0;z<3; z++)  {
-    results +=      v1[z]*v_tmp[z];
-  }
+  for (int z=0;z<3; z++)
+    result += v1[z]*v_tmp[z];
 
-  return results;
+  return result;
 }
 
+// reconstruct D* -> D0 (-> K pi) pi_slow
 void Analyzer::ReconstrDstar(const Handle<reco::TrackCollection> &tracks,const ESHandle<TransientTrackBuilder> &theB,
-                             const reco::BeamSpot &beamSpot, const TLorentzVector &J){ // float RecMass,float deltaM, float DL, float PK, float Ppi,float Ps){
-  vector<reco::TransientTrack> genralTracks = theB->build(tracks); //      declare new track builder for my new Transient track collection  ;
-  float dR,MD0,MDstar,LXY;//,lxyx,lxyy,lxy,x0,y0;
+                             const reco::BeamSpot &beamSpot, const TLorentzVector &J)
+{
+  // declare new track builder for my new Transient track collection
+  vector<reco::TransientTrack> genralTracks = theB->build(tracks);
+  float dR,MD0,MDstar,LXY;
   float vcD0[3]={0.,0.,0.};
   vector <float> DLvar;
   TLorentzVector vK;
   TLorentzVector vPi;
-  //	DL=0.001;
+
+  // daughter particle masses
   float mK=0.49367;
   float mPi=0.13957;
   int D0Cand=0;
@@ -949,108 +934,107 @@ void Analyzer::ReconstrDstar(const Handle<reco::TrackCollection> &tracks,const E
   float d0sv[3] = {0., 0., 0.};
 
   int c1,c2;
-  //x0 = beamSpot.x0();
-  //  y0 = beamSpot.y0();
-  for( reco::TrackCollection::const_iterator it1 = tracks->begin(); it1 != tracks->end(); it1++) {
-    //cout << "it1 :" << (it1-tracks->begin()) << endl;
-    if(it1->pt()<1. )
+  // 1st track (kaon)
+  for( reco::TrackCollection::const_iterator it1 = tracks->begin(); it1 != tracks->end(); it1++)
+  {
+    // select tracks with pT > 1 GeV
+    if(it1->pt()<1.)
       continue;
     vK.SetPtEtaPhiM(it1->pt(),it1->eta(),it1->phi(),mK);
+    // select tracks separated from jet by deltaR < 0.3
     if (vK.DeltaR(J)>0.3)
       continue;
     c1=it1->charge();
 
-    for( reco::TrackCollection::const_iterator it2 = tracks->begin(); it2 != tracks->end(); it2++){
-
+    // 2nd track (pion)
+    for( reco::TrackCollection::const_iterator it2 = tracks->begin(); it2 != tracks->end(); it2++)
+    {
+      // select tracks with pT > 1 GeV, skip 1st track
       if( it2->pt()<1. || *&it1==*&it2)
         continue;
       c2=it2->charge();
+      // skip tracks with the same signs
       if (c2*c1==1)
         continue;
       vPi.SetPtEtaPhiM(it2->pt(),it2->eta(),it2->phi(),mPi);
+      // select tracks separated from jet by deltaR < 0.3
       if (vPi.DeltaR(J)>0.3)
         continue;
+      // D0 momentum
       TLorentzVector vD0;
       vD0=vPi+vK;
       MD0=(vD0).M();
+      // select D0 candidates within +- 70 MeV from PDG mass M(D0) = 1864 MeV
       if (abs(MD0-1.864)>0.07)
         continue;
       TLorentzVector vPs;
       TLorentzVector Ds;
 
+      // initialise projected decay length with default value
       LXY=-777.;
 
+      // 3rd track (slow pion)
       for( reco::TrackCollection::const_iterator it3 = tracks->begin(); it3 != tracks->end(); it3++){
-        // check charges of K and Pis. They must b same
+        // check that kaon and slow pion have same signs, sign of slow pion is the same as kaon sign, and pT(slow pion) > 0.3 GeV
         if(c1==it3->charge() || it3->pt()<0.3 || *&it3==*&it1 || *&it3==*&it2)
           continue;
 
         vPs.SetPtEtaPhiM(it3->pt(),it3->eta(),it3->phi(),mPi);
+        // select tracks separated from jet by deltaR < 0.3
         if (vPs.DeltaR(J)>0.3)
           continue;
+        // D* momentum
         Ds=vD0+vPs;
         MDstar=Ds.M();
         float dM=abs(MDstar-MD0);
+        // select D* candidates with M(D*) - M(D0) within (135,170) MeV
         if (dM>0.17 || dM<0.135)
           continue;
         dR=vPs.DeltaR(vD0);
-
-
+        // select slow pion separated from D0 by deltaR < 0.1
         if (dR>0.1)
           continue;
-        // Check the slow pion originates from the same region as the D0
 
-        if(LXY==-777.){
+        if(LXY==-777.)
+        {
           // init vector for tracks of D0's products
           vector<TransientTrack> myD0Tracks;
-          // result TransientTrack vector filling
-          for(vector<TransientTrack>::iterator gt_trans = genralTracks.begin(); gt_trans !=genralTracks.end(); gt_trans++){
+          // fill TransientTrack vector
+          for(vector<TransientTrack>::iterator gt_trans = genralTracks.begin(); gt_trans !=genralTracks.end(); gt_trans++)
+          {
             const reco::TrackRef trackRef1 = (gt_trans->trackBaseRef()).castTo<reco::TrackRef>();
-            /// check if candidates from loops over TrackCollaction
-            /// exist in TransientTrack
-            if ( &*it1 == trackRef1.get() || &*it2 == trackRef1.get() )	{
-              TransientTrack  transientTrack1 = theB->build(trackRef1);
+            // check if candidates from loops over TrackCollection exists in TransientTrack
+            if ( &*it1 == trackRef1.get() || &*it2 == trackRef1.get() )
+            {
+              TransientTrack transientTrack1 = theB->build(trackRef1);
               myD0Tracks.push_back(transientTrack1);
             }
-          }//ends filling vector TransientTrack  for D0
+          }//ends filling vector TransientTrack for D0
 
           TransientVertex D0Vertex;
-          /// check if it's enough tracks to reconstruct vertex D0
-          //cout << "MD0: " << MD0 << endl;
-          if (myD0Tracks.size()<2 ){
+          // check if it's enough tracks to reconstruct D0 vertex
+          if (myD0Tracks.size() < 2)
+          {
             cout<<"Error! Not enough tracks to reconstruct vertex"<<endl;
-            break;}
+            break;
+          }
           AdaptiveVertexFitter theFitter;
-          /// TransientVertex myVertexBS = theFitter.vertex(mytracks, vertexBeamSpot);                             // if you want the beam constraint
-          D0Vertex = theFitter.vertex(myD0Tracks);                                                             // if you don't want the beam constraint
+          // TransientVertex myVertexBS = theFitter.vertex(mytracks, vertexBeamSpot); // if you want the beam constraint
+          D0Vertex = theFitter.vertex(myD0Tracks);                                    // if you don't want the beam constraint
           // check validity of D0 vertex
-          if (!D0Vertex.isValid()){
+          if (!D0Vertex.isValid())
+          {
             //cout<<"Error! Vertex is invalid"<<endl;
-            break;}
+            break;
+          }
 
           DLvar=DecayLengthSignificance(myD0Tracks,D0Vertex,beamSpot);
           LXY=DLvar[0];
 
-          /*	lxyx = (D0Vertex.position()).x()-x0;
-                                                lxyy = (D0Vertex.position()).y()-y0;
-                                                                /// direction of candidates regarding candidate
-                                                lxy = sqrt(lxyx*lxyx + lxyy*lxyy);
-
-//								float px,py,p;
-//								px=it1->px()+it2->px(); 
-//								py=it1->py()+it2->py();
-//								p=sqrt(px*px+py*py);
-
-                                                                /// calc decay length projected on momentum direction
-                                                                /// LXY = LXY * Cos(LXY^p)
-                                                lxy*=(vD0.Px()*lxyx+vD0.Py()*lxyy)/(lxy*vD0.Pt());
-                                                        */
-          // if (decay length of D0 condition)
-          // Achtung! DEFINE DL!
           if (LXY<0.)
-            break; // which exactly limit? DEFINE DL!
-          ///	cout<<"Nazar's func "<<LXY<<"	 direct calc "<<lxy<<endl;
+            break;
           D0Cand++;
+
           //locate D0 'vertex' using average coordinate of tracks
           vcD0[0] = 0.5*(it1->vx()+it2->vx()); vcD0[1] = 0.5*(it1->vy()+it2->vy()); vcD0[2] = 0.5*(it1->vz()+it2->vz());
 
@@ -1059,6 +1043,8 @@ void Analyzer::ReconstrDstar(const Handle<reco::TrackCollection> &tracks,const E
           d0sv[1] = D0Vertex.position().y();
           d0sv[2] = D0Vertex.position().z();
         }// dl CHECK
+
+        // distance between primary vertex and D0 vertex
         float vc2[3];
         vc2[0] = abs(vcD0[0]-it3->vx()); vc2[1]= abs(vcD0[1]- it3->vy()) ;vc2[2] = abs(vcD0[2]-it3->vz());
         vcx[DsCand]=vc2[0]; vcy[DsCand]=vc2[1];vcz[DsCand]=vc2[2];
@@ -1066,9 +1052,7 @@ void Analyzer::ReconstrDstar(const Handle<reco::TrackCollection> &tracks,const E
         D0dlEr[DsCand]=DLvar[1];
         D0dls[DsCand]=DLvar[2];
 
-        //	if (sqrt(vc2[0]*vc2[0] + vc2[1]*vc2[1])>10. || vc2[2] >10.) // check if tracks start close
-        //		continue;
-
+        // D* quantities
         dmDs[DsCand]=MDstar-MD0;
         ds_pt[DsCand]=Ds.Pt()*it3->charge();
         ds_eta[DsCand]=Ds.Eta();
@@ -1082,44 +1066,49 @@ void Analyzer::ReconstrDstar(const Handle<reco::TrackCollection> &tracks,const E
 
         DsCand++;
 
-        if (DsCand>=MaxDs){
+        if (DsCand>=MaxDs)
+        {
+          // skip D* to avoid overflow of allocated arrays
           cout<<"Max number of Ds candidates exceeded! The next ones will be ignored!"<<endl;
           break;
         }
 
 
-      } //TRACK 3 LOOP
-      if (DsCand>=MaxDs){
+      } // 3rd track loop
+      if (DsCand>=MaxDs)
+      {
+        // skip D* to avoid overflow of allocated arrays
         cout<<"Max number of Ds candidates exceeded! The next ones will be ignored!"<<endl;
         break;
       }
-    } //track 2 loop ends
-    if (DsCand>=MaxDs){
+    } // 2nd track loop
+    if (DsCand>=MaxDs)
+    {
+      // skip D* to avoid overflow of allocated arrays
       cout<<"Max number of Ds candidates exceeded! The next ones will be skipped!"<<endl;
       break;
     }
-  }	//track 1 loop ends
-} // func ends
+  }	// 1st track loop
+}
 
+// reconstruct D+ -> K pi pi
+// this fucntion works similarly to ReconstrDstar(): see details explained there
 void Analyzer::ReconstrD(const Handle<reco::TrackCollection> &tracks,const ESHandle<TransientTrackBuilder> &theB,
-                         const reco::BeamSpot &beamSpot, const TLorentzVector &J){ // float RecMass,float deltaM, float DL, float PK, float Ppi,float Ps){
-  vector<reco::TransientTrack> genralTracks = theB->build(tracks); //      declare new track builder for my new Transient track collection  ;
-  float MD,LXY;//,x0,y0,lxy,lxyx,lxyy;
-  //	float vcD0[3]={0.,0.,0.};
+                         const reco::BeamSpot &beamSpot, const TLorentzVector &J)
+{
+  vector<reco::TransientTrack> genralTracks = theB->build(tracks);
+  float MD,LXY;
 
   TLorentzVector vK;
   TLorentzVector vPi1;
   TLorentzVector vPi2;
-  //	DL=0.001;
+  // daughter particles masses
   float mK=0.49367;
   float mPi=0.13957;
-  //D0Cand=0;
 
   int c1,c2;
-  //	x0 = beamSpot.x0();
-  //	y0 = beamSpot.y0();
-  for( reco::TrackCollection::const_iterator it1 = tracks->begin(); it1 != tracks->end(); it1++) {
-
+  for( reco::TrackCollection::const_iterator it1 = tracks->begin(); it1 != tracks->end(); it1++)
+  {
     if(it1->pt()<1.)
       continue;
     vK.SetPtEtaPhiM(it1->pt(),it1->eta(),it1->phi(),mK);
@@ -1127,7 +1116,9 @@ void Analyzer::ReconstrD(const Handle<reco::TrackCollection> &tracks,const ESHan
       continue;
     c1=it1->charge();
 
-    for( reco::TrackCollection::const_iterator it2 = tracks->begin(); it2 != tracks->end(); it2++){
+    // 1st track
+    for( reco::TrackCollection::const_iterator it2 = tracks->begin(); it2 != tracks->end(); it2++)
+    {
       c2=it2->charge();
       if (c2*c1==1  || it2->pt()<1.)
         continue;
@@ -1137,53 +1128,46 @@ void Analyzer::ReconstrD(const Handle<reco::TrackCollection> &tracks,const ESHan
       if (vPi1.DeltaR(J)>0.3)
         continue;
 
-
       TLorentzVector vD;
 
-      //for( reco::TrackCollection::const_iterator it3 = tracks->begin(); it3 != tracks->end(); it3++){
-      for( reco::TrackCollection::const_iterator it3 = it2 + 1; it3 != tracks->end(); it3++){
-        // check charges of K and Pis. They must b same
+      // 2nd track
+      for( reco::TrackCollection::const_iterator it3 = it2 + 1; it3 != tracks->end(); it3++)
+      {
         if(c1==it3->charge() || it3->pt()<1. )
           continue;
         if (*&it3==*&it1 || *&it3==*&it2)
-        {
-          //printf("skipping\n");
           continue;
-        }
         vPi2.SetPtEtaPhiM(it3->pt(),it3->eta(),it3->phi(),mPi);
         if (vPi2.DeltaR(J)>0.3)
           continue;
         vD=vK+vPi1+vPi2;
         MD=vD.M();
-        //	float dM=abs(MD-1.8695);
         if (MD>2.2 || MD<1.6)
           continue;
 
-        // init vector for tracks of D0's products
         vector<TransientTrack> myDTracks;
-        // result TransientTrack vector filling
-        for(vector<TransientTrack>::iterator gt_trans = genralTracks.begin(); gt_trans !=genralTracks.end(); gt_trans++){
+        for(vector<TransientTrack>::iterator gt_trans = genralTracks.begin(); gt_trans !=genralTracks.end(); gt_trans++)
+        {
           const reco::TrackRef trackRef1 = (gt_trans->trackBaseRef()).castTo<reco::TrackRef>();
-          /// check if candidates from loops over TrackCollaction
-          /// exist in TransientTrack
-          if ( &*it1 == trackRef1.get() || &*it2 == trackRef1.get() || &*it3 == trackRef1.get())	{
+          if ( &*it1 == trackRef1.get() || &*it2 == trackRef1.get() || &*it3 == trackRef1.get())
+          {
             TransientTrack  transientTrack1 = theB->build(trackRef1);
             myDTracks.push_back(transientTrack1);
           }
-        }//ends filling vector TransientTrack  for D0
+        }
 
-        /// check if it's enough tracks to reconstruct vertex D0
         LXY=-1.;
-        if (myDTracks.size()<3 ){
+        if (myDTracks.size()<3 )
+        {
           cout<<"ERROR! Not enough tracks to reconstruct vertex."<<endl;
-          continue;}
+          continue;
+        }
         AdaptiveVertexFitter theFitter;
-        /// TransientVertex myVertexBS = theFitter.vertex(mytracks, vertexBeamSpot);                             // if you want the beam constraint
-        auto DVertex = theFitter.vertex(myDTracks);                                                             // if you don't want the beam constraint
+        // TransientVertex myVertexBS = theFitter.vertex(mytracks, vertexBeamSpot);  // if you want the beam constraint
+        auto DVertex = theFitter.vertex(myDTracks);                                  // if you don't want the beam constraint
         // check validity of D0 vertex
-        if (!DVertex.isValid()){
-          //cout<<endl<<"ERROR! Vertex isn't valid."<<endl;
-          continue;}
+        if (!DVertex.isValid())
+          continue;
         const std::vector<AdaptiveVertexFitter::RefCountedVertexTrack> fittedTracks = DVertex.tracks();
         if(fittedTracks.size() != 3)
           continue;
@@ -1192,24 +1176,9 @@ void Analyzer::ReconstrD(const Handle<reco::TrackCollection> &tracks,const ESHan
         vector <float> DLvar=DecayLengthSignificance(myDTracks,DVertex,beamSpot);
         LXY=DLvar[0];
 
-        /*
-                                        lxyx = (DVertex.position()).x()-x0;
-                                        lxyy = (DVertex.position()).y()-y0;
-                                                /// direction of candidates regarding candidate
-                                        lxy = sqrt(lxyx*lxyx + lxyy*lxyy);
-
-                                                /// calc decay length projected on momentum direction
-                                                /// LXY = LXY * Cos(LXY^p)
-                                        lxy*=(vD.Px()*lxyx+vD.Py()*lxyy)/(lxy*vD.Pt());
-                                                                */
-        // if (decay length of D0 condition)
-        // Achtung! DEFINE DL!
-
         if (LXY<0.)
-          continue; // which exactly limit? DEFINE DL!
-        ///		Ddl[DCand]=LXY;
-        ///		DCand++;
-        //		cout<<"Nazar's func "<<LXY<<"	 direct calc "<<lxy<<endl;
+          continue;
+
         Ddl[DCand]=LXY;
         DdlEr[DCand]=DLvar[1];
         Ddls[DCand]=DLvar[2];
@@ -1219,56 +1188,65 @@ void Analyzer::ReconstrD(const Handle<reco::TrackCollection> &tracks,const ESHan
         d_eta[DCand]=vD.Eta();
         d_phi[DCand]=vD.Phi();
 
-        // secondary vertex
         Dsv_x[DCand] = DVertex.position().x();
         Dsv_y[DCand] = DVertex.position().y();
         Dsv_z[DCand] = DVertex.position().z();
 
         DCand++;
 
-        if (DCand>=MaxD){
+        if (DCand>=MaxD)
+        {
           cout<<"Max number of D candidates exceeded! "<< DCand<<" The next ones will be ignored!"<<endl;
           break;
         }
 
-      } //TRACK 3 LOOP
+      } // 3rd track loop
 
-      if (DCand>=MaxD){
+      if (DCand>=MaxD)
+      {
         cout<<"Max number of D candidates exceeded! "<< DCand<<"  The next ones will be ignored!"<<endl;
         break;
       }
-    } //track 2 loop ends
+    } // 2nd track loop
 
-    if (DCand>=MaxD){
+    if (DCand>=MaxD)
+    {
       cout<<"Max number of D candidates exceeded! "<< DCand<<"  The next ones will be ignored!"<<endl;
       break;
     }
-  }	//track 1 loop ends
+  }	// 3rd track loop
 } 
 
+// select jets
 void Analyzer::SelectJet(const edm::Event& iEvent,const edm::EventSetup& iSetup,const reco::BeamSpot &beamSpot)
 {
-  // jets
+  // get jet collection
   edm::Handle<reco::PFJetCollection> jets;
   iEvent.getByLabel("ak5PFJets", jets);
-  Njet=0;
-  // track 2 associate with jet
+
+  // initialise number of jets
+  Njet = 0;
+
+  // track to be associated with jets
   Handle<reco::TrackCollection> tracks;
   iEvent.getByLabel("generalTracks", tracks);
 
-  /// Load the tools to work with vertices:
-
+  // Load tools to work with vertices:
   ESHandle<TransientTrackBuilder> theB;
   iSetup.get<TransientTrackRecord>().get("TransientTrackBuilder",theB);
+
   TLorentzVector Jet;
-  float pt,eta;
-  DCand=0;
-  DsCand=0;
-  float dtmp=0;
-  float dstmp=0;
-  // Load jet energy correction service
+  // initialise numbers of D* and D0 candidates
+  DCand = 0;
+  DsCand = 0;
+  // counters of D*, D0 candidates for association with jets
+  float dtmp = 0;
+  float dstmp = 0;
+
+  // load jet energy correction service
   const JetCorrector* corrector = JetCorrector::getJetCorrector(mJetCorr, iSetup);
-  // Loop over jets
+
+  // loop over jets
   for(reco::PFJetCollection::const_iterator i_pfjet = jets->begin(); i_pfjet != jets->end(); i_pfjet++)
   {
     // Apply jet energy correction (JEC)
@@ -1277,36 +1255,39 @@ void Analyzer::SelectJet(const edm::Event& iEvent,const edm::EventSetup& iSetup,
     reco::PFJet corjet = *i_pfjet;
     // apply JEC
     corjet.scaleEnergy(jec);
-    // check jet
-    pt=corjet.pt();eta=corjet.eta();
+    // check jet pT and eta
+    float pt=corjet.pt();
+    float eta=corjet.eta();
     if(pt<25. || abs(eta)>2.5)
       continue;
+
+    // store jet quatities
     j_pt[Njet]=pt;
     j_eta[Njet]=eta;
     j_phi[Njet]=corjet.phi();
     j_m[Njet]=corjet.mass();
 
     Jet.SetPtEtaPhiE(pt,eta,corjet.phi(),corjet.energy());
-    if (DsCand<MaxDs){
+    // reconstruct D*
+    if (DsCand < MaxDs)
       ReconstrDstar(tracks,theB,beamSpot,Jet);
-    }
-
-
     j_DsInJ[Njet]=DsCand-dstmp;
     dstmp=DsCand;
-    if (DCand<MaxD){
-      ReconstrD(tracks,theB,beamSpot,Jet);
-    }
 
+    // reconstruct D+
+    if (DCand<MaxD)
+      ReconstrD(tracks,theB,beamSpot,Jet);
     j_DInJ[Njet]=DCand-dtmp;
     dtmp=DCand;
-    //	cout<<"DsCand ="<<DsCand<<"  "<<" j_DsInJ="<<j_DsInJ[Njet]<<" DCand ="<<DCand<<"  j_DInJ="<<j_DInJ[Njet]<<" Njet="<<Njet<<endl<<endl;
+
     Njet++;
-    if (Njet>=Maxjet){
+    if (Njet>=Maxjet)
+    {
+      // skip jet to avoid overflow of allocated arrays
       cout<<endl<<"Warning! Number of jets exceed maximum expected! Next ones will be skipped"<<endl;
       break;
     }
-  }// jets loop
+  } // jet loop
 }
 
 // returns vector of integers which are needed trigger bits
@@ -1331,6 +1312,7 @@ void Analyzer::FindTriggerBits(const HLTConfigProvider& trigConf)
   }
 }
 
+// print determined trigger nits
 void Analyzer::PrintTriggerBits()
 {
   printf("********* Trigger Bits: **********\n");
@@ -1359,8 +1341,7 @@ void Analyzer::SelectTriggerBits(const edm::Handle<edm::TriggerResults>& HLTR)
   //printf("*************\n");
 }
 
-
-
+// main analyze rootine called for each event
 void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
   using namespace edm;
   using namespace reco;
@@ -1375,15 +1356,15 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
   ESHandle<SetupData> pSetup;
   iSetup.get<SetupRecord>().get(pSetup);
 #endif
-  // beamspot 2 calc decay length
+
+  // beamspot needed for calculation of decay length
   Handle<reco::BeamSpot> beamSpotHandle;
   iEvent.getByLabel("offlineBeamSpot", beamSpotHandle);
   reco::BeamSpot beamSpot;
-  if ( beamSpotHandle.isValid() )	{
+  if(beamSpotHandle.isValid())
     beamSpot = *beamSpotHandle;
-  } else	{
-    edm::LogInfo("Demo")
-        << "No beam spot available from EventSetup \n";}
+  else
+    edm::LogInfo("Demo") << "No beam spot available from EventSetup \n";
 
   // primary vertex (beamspot for x, y)
   Handle<reco::VertexCollection> primVertex;
@@ -1393,39 +1374,49 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
   pv_x = beamSpot.x0() + beamSpot.dxdz() * pv_z;
   pv_y = beamSpot.y0() + beamSpot.dydz() * pv_z;
 
+  // generator level info
   edm::Handle<reco::GenParticleCollection> genParticles;
-  //edm::Handle<reco::MuonCollection> gmuons;
-  //iEvent.getByLabel("muons", gmuons);
 
+  // select missing transverse momentum
   SelectMET(iEvent);
+
+  // select (store) general event quantites
   SelectEvent(iEvent);
-  Nel=0;
+
+  // select electrons
+  Nel = 0;
   SelectEl(iEvent);
+
+  // select muons
+  Nmu = 0;
   SelectMu(iEvent,beamSpot);
+
+  // if MC generator level, process generator level information
   if(flagGEN)
   {
     iEvent.getByLabel(_inputTagMCgen, genParticles);
     SelectMCGen(genParticles);
   }
-  if (Nel>0 || Nmu>0 || mcEventType>0){
+
+  // proceed if there is at least on electron (Nel), or muon (Nmu), or required generator level information (mcEventType)
+  if (Nel > 0 || Nmu > 0 || mcEventType > 0)
+  {
+    // select jets (this routine calls reconstruction of D* and D+)
     SelectJet(iEvent, iSetup,beamSpot);
-    if ((((DCand>0) || (Nmu>0) || (DsCand>0))&& Njet>0) || mcEventType>0)
+
+    // proceed if there is any of charm final states, or required generator level information (mcEventType)
+    if (((DCand > 0 || Nmu > 0 ||  DsCand > 0) && Njet>0) || mcEventType>0)
     {
-      //mc
-
-
       // triggers
       Handle<TriggerResults> HLTR;
       iEvent.getByLabel(_inputTagTriggerResults, HLTR);
       SelectTriggerBits(HLTR);
-      // fill
+
+      // fill event
       tree->Fill();
       Nsel++;
     }
-  }//Nel = Nmu = Njet = DsCand = D0Cand = 0;
-  //printf("before Fill()\n");
-  //if (Nevt%1000==0)
-  //cout<<endl<<"Nevt= "<<Nevt;
+  }
 
   Nevt++;
   if( (Nevt % 1000) == 0)
@@ -1435,7 +1426,6 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
     //printf("*****************************************************************\n");
   }
 }
-
 
 
 // ------------ method called once each job just before starting event loop  ------------
