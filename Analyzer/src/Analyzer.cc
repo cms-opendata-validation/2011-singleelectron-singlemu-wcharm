@@ -833,6 +833,7 @@ vector<float> Analyzer::DecayLengthSignificance(vector<TransientTrack> tracksVec
   // and its trasverse momentum
   PtSum = sqrt(PxSum*PxSum + PySum*PySum);
 
+  float Lz = CMSFittedVtx.position().z() - beamSpot.z0();
   float Lx = (CMSFittedVtx.position().x() - (beamSpot.x0() + beamSpot.dxdz()*Lz) );
   float Ly = (CMSFittedVtx.position().y() - (beamSpot.y0() + beamSpot.dydz()*Lz) );
 
