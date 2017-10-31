@@ -12,7 +12,7 @@ General description of contents (find further description inside the files):
    wcharm_tree.h: tree structure of input ROOT ntuples
    wcharm_settings.h: global settings (directory names)
    wcharmMakePlots.cxx: master file to produce final plots and numbers
-   plots.h: helper file for plotting
+   wcharm_plots.h: helper file for plotting
 
 To run the analysis, make sure input ntuples are in place, for default 
 directory structure you need to run from the root analysis directory:
@@ -21,11 +21,11 @@ mv Analyzer/ntuples-mc PostAnalyzer/ntuples-mc
 then compile the code:
 ./compile.sh
 and run two commands:
-./ttbarMakeHist
-./ttbarMakePlots
+./wcharmMakeHist
+./wcharmMakePlots
 
 Also you could do only the last step (plotting) by using "reference" 
 histograms produced with the full samples and available with the code 
-(PostAnalyzerhist-REF directory), for this modify settings.h. 
+(PostAnalyzer/hist-REF directory), for this modify wcharm_settings.h. 
 Another application of the "reference" histograms could be for 
 validation (produce new histograms and compare to the reference ones).
