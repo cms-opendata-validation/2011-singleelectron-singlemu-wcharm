@@ -67,7 +67,7 @@ INPUTLIST='data/CMS_Run2011A_SingleMu_AOD_12Oct2013-v1-all_file_index.txt'
 #INPUTLIST='data/CMS_Run2011A_SingleElectron_AOD_12Oct2013-v1-all_file_index.txt'
 #
 # MC ('W + c' signal and 'W + jets other' background) - most time consuming!
-#INPUTLIST='mc/CMS_MonteCarlo2011_Summer11LegDR_W1Jet_TuneZ2_7TeV-madgraph-tauola_AODSIM_PU_S13_START53_LV6-v1-all_file_index.txt'
+#INPUTLIST='mc/CMS_MonteCarlo2011_Summer11LegDR_WJetsToLNu_TuneZ2_7TeV-madgraph-tauola_AODSIM_PU_S13_START53_LV6-v1-all_file_index.txt'
 #
 ########################################################################
 
@@ -86,7 +86,7 @@ OUTPUTDIR='ntuples-data/SingleMu'
 #OUTPUTDIR='ntuples-data/SingleElectron'
 #
 # MC ('W + c' signal and 'W + jets other' background)
-#OUTPUTDIR='ntuples-mc/W1Jet_TuneZ2_7TeV-madgraph-tauola'
+#OUTPUTDIR='ntuples-mc/WJetsToLNu_TuneZ2_7TeV-madgraph-tauola'
 #
 ########################################################################
 
