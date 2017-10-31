@@ -1,8 +1,0 @@
-PostAnalyzer/wcharm_eventreco.h
-PostAnalyzer/wcharm_plots.h
-PostAnalyzer/wcharm_selection.h
-PostAnalyzer/wcharm_tree.h
-PostAnalyzer/wcharm_settings.h
-PostAnalyzer/wcharmMakePlots.cxx
-PostAnalyzer/wcharmMakeHist.cxx
-Analyzer/src/Analyzer.cc
