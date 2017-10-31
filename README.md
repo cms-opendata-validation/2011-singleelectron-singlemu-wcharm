@@ -42,4 +42,4 @@ Generally, the analysis steps are:
 
 Further description of these steps you can find Analyzer/README.txt and Postanalyzer/README.txt
 
-### Authors: ###### Oleksandr Kot, Oleksandr Zenaiev
+### Authors: ### Oleksandr Kot, Oleksandr Zenaiev
