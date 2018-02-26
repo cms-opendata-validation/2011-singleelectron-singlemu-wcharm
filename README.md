@@ -19,7 +19,7 @@ cd ./WorkingArea
 cmsrel CMSSW_5_3_32
 cd ./CMSSW_5_3_32/src
 cmsenv
-git clone https://github.com/zenaiev/2011-singleelectron-singlemu-wcharm.git
+git clone git://github.com/zenaiev/2011-singleelectron-singlemu-wcharm.git
 scram b
 cd 2011-singleelectron-singlemu-wcharm/Analyzer
 ln -sf /cvmfs/cms-opendata-conddb.cern.ch/FT_53_LV5_AN1_RUNA FT_53_LV5_AN1
